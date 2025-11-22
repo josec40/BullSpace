@@ -31,7 +31,7 @@ const SearchPage = () => {
     const handleSearch = (e) => {
         e.preventDefault();
 
-        // Basic Validation
+
         if (!filters.date || !filters.startTime || !filters.endTime) {
             setError("Please select a date and time range.");
             return;

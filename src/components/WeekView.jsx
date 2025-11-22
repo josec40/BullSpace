@@ -25,16 +25,6 @@ const WeekView = ({ currentDate, bookings, room }) => {
 
         return dayBookings.find(b => {
             const { start, end } = parseTimeSlot(b.time_slot);
-            // Adjust start/end to match the specific day for comparison
-            // (Since parseTimeSlot uses "today" as base)
-            // Actually, we just need to check time overlap, assuming date is already filtered.
-            // But isWithinInterval requires full dates.
-            // Let's construct full dates for the slot and the booking times on THIS day.
-
-            // Simple time string comparison might be easier if we trust the format
-            // But let's stick to date-fns for robustness
-
-            // Re-parse start/end times onto the specific 'day'
             const bStart = parse(format(start, 'HH:mm'), 'HH:mm', day);
             const bEnd = parse(format(end, 'HH:mm'), 'HH:mm', day);
 

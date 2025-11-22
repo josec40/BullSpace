@@ -17,13 +17,13 @@ const DashboardPage = () => {
     const [gridData, setGridData] = useState({ rooms: [], timeHeaders: [], dayBookings: [] });
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentView, setCurrentView] = useState('day');
-    const [selectedRoom, setSelectedRoom] = useState(roomsData[0]); // Default to first room for room-specific views
+    const [selectedRoom, setSelectedRoom] = useState(roomsData[0]);
 
-    // Enrich bookings with room data - memoized to prevent infinite loop
+   
     const bookings = useMemo(() => getEnrichedBookings(rawBookings, roomsData), [rawBookings]);
 
     useEffect(() => {
-        // Update grid data when date or bookings change
+   
         const data = getGridData(bookings, currentDate);
         setGridData(data);
     }, [bookings, currentDate]);

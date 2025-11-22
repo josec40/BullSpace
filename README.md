@@ -1,42 +1,37 @@
-# 🏫 Bullspace - USF Room Reservation System
+# BullSpace - USF Room Reservation System
 
-**Bullspace** is a comprehensive room reservation platform designed for the University of South Florida campus. Built for HackJam (Hackathon), this web application streamlines the process of finding, booking, and managing campus study spaces with an intuitive interface and real-time availability tracking.
+BullSpace is a comprehensive room reservation platform designed for the University of South Florida campus. Built for HackJam (Hackathon), this web application streamlines the process of finding, booking, and managing campus study spaces with an intuitive interface and real-time availability tracking.
 
-![Dashboard View](screenshots/dashboard.png)
 
-## ✨ Features
+## Features
 
-### 📅 **Multi-View Dashboard**
+### **Multi-View Dashboard**
 - **Day View**: See all rooms and their hourly availability at a glance
 - **Week View**: Plan ahead with a 7-day schedule for specific rooms
 - **Month View**: Get a bird's-eye view of booking patterns
 - Interactive navigation with date pickers and view switchers
 
-### 🔍 **Smart Search & Booking**
+### **Smart Search & Booking**
 - Advanced filtering by building, capacity, and amenities
 - Real-time availability checking across all campus locations
 - Conflict detection to prevent double-bookings
 - One-click booking with instant confirmation
 
-![Search Page](screenshots/search.png)
 
-### 🗺️ **Interactive Map View**
+### **Interactive Map View**
 - Visual campus map powered by Leaflet
 - Pin markers showing building locations
 - Click on buildings to see available rooms
 - Scrollable room cards with quick booking access
 
-![Map View](screenshots/map.png)
 
-### 📋 **Booking Management**
+### **Booking Management**
 - Review and confirm booking details before submission
 - View all room information (capacity, amenities, location)
 - Easy-to-read booking summaries
 - Responsive design for mobile and desktop
 
-![Booking Page](screenshots/booking.png)
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend Framework**: React 19.2.0
 - **Build Tool**: Vite 7.2.4
@@ -47,7 +42,7 @@
 - **Date Handling**: date-fns 4.1.0
 - **Code Quality**: ESLint 9.39.1
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v16 or higher recommended)
@@ -58,7 +53,7 @@
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd "julio final branch"
+   cd "BullSpace"
    ```
 
 2. **Install dependencies**
@@ -82,10 +77,10 @@
 - `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint for code quality checks
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
-julio final branch/
+BullSpace/
 ├── src/
 │   ├── components/     # Reusable UI components
 │   ├── pages/          # Route pages (Dashboard, Search, Booking, Map)
@@ -99,7 +94,7 @@ julio final branch/
 └── vite.config.js      # Vite configuration
 ```
 
-## 🎯 Key Functionality
+## Key Functionality
 
 ### Room Booking Flow
 1. **Search**: Filter available rooms by criteria (building, capacity, amenities)
@@ -114,60 +109,17 @@ julio final branch/
 - **Responsive Calendar**: Switch between day, week, and month views seamlessly
 
 ### Map Integration
-- **Interactive Campus Map**: Powered by OpenStreetMap via Leaflet
+- **Interactive Campus Map**: Using OpenStreetMap via Leaflet
 - **Building Markers**: Custom pins for each campus building
 - **Room Popup Cards**: Click buildings to see available rooms with details
 - **Direct Booking**: Book rooms directly from the map interface
 
-## 📊 Data Structure
+## Data Structure
 
 The application uses a mock database (`mock_db.json`) for bookings and `rooms.json` for room information. Each room includes:
 - Room name and ID
 - Building location with GPS coordinates
 - Capacity and amenities
 - Availability status
-
-## 🎓 Hackathon Information
-
-- **Event**: HackJam
-- **Purpose**: Simplify campus room reservations for students
-- **Development Time**: Built during the hackathon
-- **Team**: [Add your team members here]
-
-## 🔮 Future Enhancements
-
-- [ ] User authentication and profiles
-- [ ] Email/SMS booking confirmations
-- [ ] Integration with USF's actual room database
-- [ ] Mobile app version (React Native)
-- [ ] Calendar export (iCal/Google Calendar)
-- [ ] Room popularity analytics
-
-## 📸 Screenshots
-
-### Dashboard - Day View
-![Dashboard](screenshots/dashboard.png)
-
-### Search & Filter
-![Search](screenshots/search.png)
-
-### Booking Confirmation
-![Booking](screenshots/booking.png)
-
-### Interactive Map
-![Map](screenshots/map.png)
-
-## 📝 License
-
-This project was created for educational purposes during a hackathon.
-
-## 🙏 Acknowledgments
-
-- University of South Florida for inspiring this project
-- OpenStreetMap contributors for map data
-- Leaflet.js for the amazing mapping library
-- The hackathon organizers and mentors
-
 ---
 
-**Built with ❤️ for USF students**

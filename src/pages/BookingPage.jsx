@@ -28,7 +28,6 @@ const BookingPage = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // If room is pre-filled, find its name for display (optional, but good for UX)
     const selectedRoom = roomsData.find(r => r.id === formData.room);
 
     const handleChange = (e) => {
@@ -50,16 +49,11 @@ const BookingPage = () => {
         setError(null);
         setSuggestions([]);
 
-
-
-        // 1. Validate Room Selection
         if (!formData.room) {
             setError("No room selected. Please select a room from the Search page.");
             return;
         }
 
-        // 2. Validate Date
-        // Parse date string (YYYY-MM-DD) as local date
         const parsedDate = parse(formData.date, 'yyyy-MM-dd', new Date());
         const dateError = validateBookingDate(parsedDate);
         if (dateError) {
@@ -67,7 +61,6 @@ const BookingPage = () => {
             return;
         }
 
-        // 3. Check for Conflicts
         const conflictCheck = searchRooms({
             date: parsedDate,
             startTime: formData.startTime,
@@ -79,7 +72,6 @@ const BookingPage = () => {
         if (!isRoomAvailable) {
             setError("Room taken at this time.");
 
-            // Find suggestions in the same building
             if (selectedRoom) {
                 const alternatives = searchRooms({
                     date: new Date(formData.date),
@@ -88,11 +80,7 @@ const BookingPage = () => {
                     building: selectedRoom.building
                 }, roomsData, bookings);
 
-                // Filter out the current room (which we know is taken, but searchRooms might return it if my logic above was loose, 
-                // but searchRooms SHOULD exclude taken rooms. 
-                // Wait, searchRooms returns AVAILABLE rooms. 
-                // So if isRoomAvailable is false, it means formData.room is NOT in conflictCheck.
-                // So alternatives will contain other rooms in the building that ARE available.
+    
                 setSuggestions(alternatives);
             }
             return;
@@ -100,7 +88,7 @@ const BookingPage = () => {
 
         setIsSubmitting(true);
 
-        // 3. Save Booking
+       
         const newBooking = {
             roomId: formData.room,
             date: formData.date,

@@ -7,10 +7,9 @@ import 'leaflet/dist/leaflet.css';
 import { buildingCoordinates } from '../data/coordinates';
 import roomsData from '../data/rooms.json';
 
-// Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
 
-// Custom red pin icon using SVG
+
 const customIcon = new L.divIcon({
     className: 'custom-pin',
     html: `
@@ -37,8 +36,6 @@ const customIcon = new L.divIcon({
 
 const MapView = () => {
     const [selectedBuilding, setSelectedBuilding] = useState(null);
-
-    // Group rooms by building
     const roomsByBuilding = useMemo(() => {
         const grouped = {};
         roomsData.forEach(room => {
