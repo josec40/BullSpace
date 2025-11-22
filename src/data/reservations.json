@@ -1,0 +1,164 @@
+[
+    {
+        "id": 1,
+        "roomId": "enb-109",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "10:00 AM - 12:00 PM",
+        "organization": "Society of Women Engineers",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 2,
+        "roomId": "hall-flags",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "08:00 AM - 05:00 PM",
+        "organization": "Career Services",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 3,
+        "roomId": "enb-109",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "10:00 AM - 12:00 PM",
+        "organization": "Google Developer Group",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 4,
+        "roomId": "enb-118",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "01:00 PM - 03:00 PM",
+        "organization": "ACM",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 5,
+        "roomId": "isa-1051",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "09:00 AM - 11:00 AM",
+        "organization": "Biology Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 6,
+        "roomId": "rec-field-1",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "04:00 PM - 06:00 PM",
+        "organization": "Intramural Soccer",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 7,
+        "roomId": "msc-2708",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "11:00 AM - 01:00 PM",
+        "organization": "Student Government",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 8,
+        "roomId": "lib-201",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "02:00 PM - 04:00 PM",
+        "organization": "Study Group A",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 9,
+        "roomId": "enb-110",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "08:00 AM - 10:00 AM",
+        "organization": "IEEE",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 10,
+        "roomId": "isa-3001",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "12:00 PM - 02:00 PM",
+        "organization": "Chemistry Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 11,
+        "roomId": "msc-ballroom",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "06:00 PM - 10:00 PM",
+        "organization": "Dance Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 12,
+        "roomId": "rec-gym-1",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "05:00 PM - 07:00 PM",
+        "organization": "Basketball Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 13,
+        "roomId": "enb-109",
+        "system_source": "25Live",
+        "status": "Available",
+        "time_slot": "02:00 PM - 04:00 PM",
+        "organization": "N/A",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 14,
+        "roomId": "isa-1051",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "02:00 PM - 04:00 PM",
+        "organization": "Physics Society",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 15,
+        "roomId": "msc-3707",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "09:00 AM - 11:00 AM",
+        "organization": "Debate Team",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 16,
+        "roomId": "lib-404",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "10:00 AM - 12:00 PM",
+        "organization": "History Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 17,
+        "roomId": "rec-pool",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "07:00 AM - 09:00 AM",
+        "organization": "Swim Team",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 18,
+        "roomId": "enb-118",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "04:00 PM - 06:00 PM",
+        "organization": "Robotics Club",
+        "date": "2025-11-15"
+    }
+]

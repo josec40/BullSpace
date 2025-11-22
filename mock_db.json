@@ -1,0 +1,182 @@
+[
+    {
+        "id": 1,
+        "room_name": "ENB 109",
+        "building": "Engineering Building II",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "10:00 AM - 12:00 PM",
+        "organization": "Society of Women Engineers",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 2,
+        "room_name": "Hall of Flags",
+        "building": "Marshall Student Center",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "08:00 AM - 05:00 PM",
+        "organization": "Career Services",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 3,
+        "room_name": "ENB 109",
+        "building": "Engineering Building II",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "10:00 AM - 12:00 PM",
+        "organization": "Google Developer Group",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 4,
+        "room_name": "ENB 118",
+        "building": "Engineering Building II",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "01:00 PM - 03:00 PM",
+        "organization": "ACM",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 5,
+        "room_name": "ISA 1051",
+        "building": "Interdisciplinary Sciences",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "09:00 AM - 11:00 AM",
+        "organization": "Biology Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 6,
+        "room_name": "Rec Field 1",
+        "building": "Recreation Center",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "04:00 PM - 06:00 PM",
+        "organization": "Intramural Soccer",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 7,
+        "room_name": "MSC 2708",
+        "building": "Marshall Student Center",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "11:00 AM - 01:00 PM",
+        "organization": "Student Government",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 8,
+        "room_name": "LIB 201",
+        "building": "Library",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "02:00 PM - 04:00 PM",
+        "organization": "Study Group A",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 9,
+        "room_name": "ENB 110",
+        "building": "Engineering Building II",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "08:00 AM - 10:00 AM",
+        "organization": "IEEE",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 10,
+        "room_name": "ISA 3001",
+        "building": "Interdisciplinary Sciences",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "12:00 PM - 02:00 PM",
+        "organization": "Chemistry Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 11,
+        "room_name": "MSC Ballroom",
+        "building": "Marshall Student Center",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "06:00 PM - 10:00 PM",
+        "organization": "Dance Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 12,
+        "room_name": "Rec Gym 1",
+        "building": "Recreation Center",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "05:00 PM - 07:00 PM",
+        "organization": "Basketball Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 13,
+        "room_name": "ENB 109",
+        "building": "Engineering Building II",
+        "system_source": "25Live",
+        "status": "Available",
+        "time_slot": "02:00 PM - 04:00 PM",
+        "organization": "N/A",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 14,
+        "room_name": "ISA 1051",
+        "building": "Interdisciplinary Sciences",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "02:00 PM - 04:00 PM",
+        "organization": "Physics Society",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 15,
+        "room_name": "MSC 3707",
+        "building": "Marshall Student Center",
+        "system_source": "Virtual EMS",
+        "status": "Booked",
+        "time_slot": "09:00 AM - 11:00 AM",
+        "organization": "Debate Team",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 16,
+        "room_name": "LIB 404",
+        "building": "Library",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "10:00 AM - 12:00 PM",
+        "organization": "History Club",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 17,
+        "room_name": "Rec Pool",
+        "building": "Recreation Center",
+        "system_source": "RecWell",
+        "status": "Booked",
+        "time_slot": "07:00 AM - 09:00 AM",
+        "organization": "Swim Team",
+        "date": "2025-11-15"
+    },
+    {
+        "id": 18,
+        "room_name": "ENB 118",
+        "building": "Engineering Building II",
+        "system_source": "25Live",
+        "status": "Booked",
+        "time_slot": "04:00 PM - 06:00 PM",
+        "organization": "Robotics Club",
+        "date": "2025-11-15"
+    }
+]
