@@ -1,0 +1,148 @@
+[
+    {
+        "id": "enb-109",
+        "name": "ENB 109",
+        "building": "Engineering Building II",
+        "capacity": 40,
+        "type": "Classroom",
+        "features": [
+            "Projector",
+            "Whiteboard"
+        ]
+    },
+    {
+        "id": "hall-flags",
+        "name": "Hall of Flags",
+        "building": "Marshall Student Center",
+        "capacity": 100,
+        "type": "Conference Room",
+        "features": [
+            "Stage",
+            "Sound System"
+        ]
+    },
+    {
+        "id": "enb-118",
+        "name": "ENB 118",
+        "building": "Engineering Building II",
+        "capacity": 35,
+        "type": "Classroom",
+        "features": [
+            "Projector"
+        ]
+    },
+    {
+        "id": "isa-1051",
+        "name": "ISA 1051",
+        "building": "Interdisciplinary Sciences",
+        "capacity": 50,
+        "type": "Classroom",
+        "features": [
+            "Smart Board"
+        ]
+    },
+    {
+        "id": "rec-field-1",
+        "name": "Rec Field 1",
+        "building": "Recreation Center",
+        "capacity": 200,
+        "type": "Sports Facility",
+        "features": [
+            "Lighting"
+        ]
+    },
+    {
+        "id": "msc-2708",
+        "name": "MSC 2708",
+        "building": "Marshall Student Center",
+        "capacity": 25,
+        "type": "Conference Room",
+        "features": [
+            "TV"
+        ]
+    },
+    {
+        "id": "lib-201",
+        "name": "LIB 201",
+        "building": "Library",
+        "capacity": 10,
+        "type": "Conference Room",
+        "features": [
+            "Whiteboard"
+        ]
+    },
+    {
+        "id": "enb-110",
+        "name": "ENB 110",
+        "building": "Engineering Building II",
+        "capacity": 40,
+        "type": "Classroom",
+        "features": [
+            "Projector"
+        ]
+    },
+    {
+        "id": "isa-3001",
+        "name": "ISA 3001",
+        "building": "Interdisciplinary Sciences",
+        "capacity": 60,
+        "type": "Computer Lab",
+        "features": [
+            "Computers",
+            "Lab Equipment"
+        ]
+    },
+    {
+        "id": "msc-ballroom",
+        "name": "MSC Ballroom",
+        "building": "Marshall Student Center",
+        "capacity": 500,
+        "type": "Conference Room",
+        "features": [
+            "Stage",
+            "AV System",
+            "Banquet Tables"
+        ]
+    },
+    {
+        "id": "rec-gym-1",
+        "name": "Rec Gym 1",
+        "building": "Recreation Center",
+        "capacity": 100,
+        "type": "Sports Facility",
+        "features": [
+            "Basketball Court"
+        ]
+    },
+    {
+        "id": "msc-3707",
+        "name": "MSC 3707",
+        "building": "Marshall Student Center",
+        "capacity": 30,
+        "type": "Conference Room",
+        "features": [
+            "Conference Table"
+        ]
+    },
+    {
+        "id": "lib-404",
+        "name": "LIB 404",
+        "building": "Library",
+        "capacity": 15,
+        "type": "Computer Lab",
+        "features": [
+            "Computers",
+            "Study Pods"
+        ]
+    },
+    {
+        "id": "rec-pool",
+        "name": "Rec Pool",
+        "building": "Recreation Center",
+        "capacity": 50,
+        "type": "Sports Facility",
+        "features": [
+            "Lanes"
+        ]
+    }
+]

@@ -1,0 +1,148 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: BullSpace — USF Room Reservation API
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 10
+    MemorySize: 256
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref BullSpaceTable
+    Architectures:
+      - x86_64
+
+Resources:
+  # ──────────────────────────────────────────────
+  #  DynamoDB Table
+  # ──────────────────────────────────────────────
+  BullSpaceTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: BullSpaceTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        # GSI1 — Query all bookings by date
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        # GSI2 — List all rooms (inverted SK → PK)
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: SK
+              KeyType: HASH
+            - AttributeName: PK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  # ──────────────────────────────────────────────
+  #  API Gateway (HTTP API)
+  # ──────────────────────────────────────────────
+  BullSpaceApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+  # ──────────────────────────────────────────────
+  #  Lambda Functions — Rooms
+  # ──────────────────────────────────────────────
+  GetRoomsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/rooms.getRooms
+      CodeUri: .
+      Description: List all rooms or get a single room by ID
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref BullSpaceTable
+      Events:
+        GetAllRooms:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BullSpaceApi
+            Path: /rooms
+            Method: GET
+        GetSingleRoom:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BullSpaceApi
+            Path: /rooms/{roomId}
+            Method: GET
+
+  # ──────────────────────────────────────────────
+  #  Lambda Functions — Bookings
+  # ──────────────────────────────────────────────
+  GetBookingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/bookings.getBookings
+      CodeUri: .
+      Description: Get bookings by room+date or all bookings for a date
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref BullSpaceTable
+      Events:
+        GetBookingsByDate:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BullSpaceApi
+            Path: /bookings
+            Method: GET
+
+  CreateBookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/bookings.createBooking
+      CodeUri: .
+      Description: Create a new booking with conflict detection
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BullSpaceTable
+      Events:
+        CreateBooking:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BullSpaceApi
+            Path: /bookings
+            Method: POST
+
+Outputs:
+  ApiEndpoint:
+    Description: HTTP API endpoint URL
+    Value: !Sub 'https://${BullSpaceApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
+  TableName:
+    Description: DynamoDB table name
+    Value: !Ref BullSpaceTable
