@@ -1,8 +1,10 @@
 import React from 'react';
 import { parseTimeSlot } from '../utils/bookingUtils';
 import { parse, isWithinInterval, addMinutes } from 'date-fns';
+import { useAuth } from '../context/AuthContext';
 
 const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
+    const { currentUser } = useAuth();
 
     const isSlotBooked = (room, timeStr) => {
         const slotStart = parse(timeStr, 'hh:mm a', new Date());
@@ -19,6 +21,13 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
         }
 
         return overlappingBookings[0];
+    };
+
+    const getDisplayName = (booking) => {
+        if (currentUser?.role === 'admin' || currentUser?.name === booking.organization) {
+            return booking.organization;
+        }
+        return 'Reserved';
     };
 
     return (
@@ -58,7 +67,7 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
                                             {booking && (
                                                 <>
                                                     <span className="text-[10px] text-white font-bold uppercase tracking-tight leading-tight opacity-95 line-clamp-2">
-                                                        {booking.isConflict ? 'Conflict!' : booking.organization}
+                                                        {booking.isConflict ? 'Conflict!' : getDisplayName(booking)}
                                                     </span>
 
                                                     {/* Tooltip */}
@@ -71,7 +80,7 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
                                                             </div>
                                                         ) : (
                                                             <div>
-                                                                <p className="font-bold text-sm mb-1 text-indigo-100">{booking.organization}</p>
+                                                                <p className="font-bold text-sm mb-1 text-indigo-100">{getDisplayName(booking)}</p>
                                                                 <p className="mb-2 text-slate-300">{booking.time_slot}</p>
                                                                 <div className="flex items-center justify-between border-t border-slate-700 pt-2 mt-2">
                                                                     <span className="text-slate-400 text-[10px] uppercase tracking-wide">Source</span>

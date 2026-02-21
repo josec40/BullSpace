@@ -1,12 +1,24 @@
 import React from 'react';
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
-const DateNavigator = ({ currentDate, onDateChange }) => {
+const DateNavigator = ({ currentDate, onDateChange, currentView = 'day' }) => {
+    const handlePrevious = () => {
+        if (currentView === 'day') onDateChange(subDays(currentDate, 1));
+        else if (currentView === 'week') onDateChange(subWeeks(currentDate, 1));
+        else if (currentView === 'month') onDateChange(subMonths(currentDate, 1));
+    };
+
+    const handleNext = () => {
+        if (currentView === 'day') onDateChange(addDays(currentDate, 1));
+        else if (currentView === 'week') onDateChange(addWeeks(currentDate, 1));
+        else if (currentView === 'month') onDateChange(addMonths(currentDate, 1));
+    };
+
     return (
         <div className="flex items-center bg-white rounded-lg shadow-sm border border-slate-200 p-1">
             <button
-                onClick={() => onDateChange(subDays(currentDate, 1))}
+                onClick={handlePrevious}
                 className="p-2 hover:bg-slate-100 rounded-md text-slate-600 transition-colors"
             >
                 <ChevronLeft size={20} />
@@ -20,7 +32,7 @@ const DateNavigator = ({ currentDate, onDateChange }) => {
             </div>
 
             <button
-                onClick={() => onDateChange(addDays(currentDate, 1))}
+                onClick={handleNext}
                 className="p-2 hover:bg-slate-100 rounded-md text-slate-600 transition-colors"
             >
                 <ChevronRight size={20} />

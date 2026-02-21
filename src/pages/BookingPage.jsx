@@ -7,15 +7,17 @@ import roomsData from '../data/rooms.json';
 import { format } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { searchRooms } from '../utils/bookingUtils';
+import { useAuth } from '../context/AuthContext';
 
 const BookingPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { bookings, addBooking } = useBookings();
+    const { currentUser } = useAuth();
     const prefilled = location.state?.prefilled || {};
 
     const [formData, setFormData] = useState({
-        orgName: '',
+        orgName: currentUser?.role === 'org' ? currentUser.name : '',
         eventName: '',
         occupancy: '',
         date: prefilled.date || '',
@@ -67,7 +69,8 @@ const BookingPage = () => {
             endTime: formData.endTime,
         }, roomsData, bookings);
 
-        const isRoomAvailable = conflictCheck.some(r => r.id === formData.room);
+        const targetRoom = conflictCheck.find(r => r.id === formData.room);
+        const isRoomAvailable = targetRoom && targetRoom.isAvailable;
 
         if (!isRoomAvailable) {
             setError("Room taken at this time.");
@@ -80,7 +83,7 @@ const BookingPage = () => {
                     building: selectedRoom.building
                 }, roomsData, bookings);
 
-    
+
                 setSuggestions(alternatives);
             }
             return;
@@ -88,7 +91,7 @@ const BookingPage = () => {
 
         setIsSubmitting(true);
 
-       
+
         const newBooking = {
             roomId: formData.room,
             date: formData.date,
@@ -181,7 +184,8 @@ const BookingPage = () => {
                                         type="text"
                                         name="orgName"
                                         required
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                                        readOnly={currentUser?.role === 'org'}
+                                        className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${currentUser?.role === 'org' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`}
                                         placeholder="e.g. Society of Engineers"
                                         value={formData.orgName}
                                         onChange={handleChange}
@@ -240,7 +244,6 @@ const BookingPage = () => {
                                             onChange={handleChange}
                                         />
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-1">Aug 25 - Dec 5 only</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
