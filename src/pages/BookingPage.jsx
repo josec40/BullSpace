@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { parse } from 'date-fns';
+import { parse, format } from 'date-fns';
 import { ArrowLeft, Check, Users, Building, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { validateBookingDate } from '../utils/validationUtils';
-import roomsData from '../data/rooms.json';
-import { format } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { searchRooms } from '../utils/bookingUtils';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 const BookingPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { bookings, addBooking } = useBookings();
+    const { addBooking, fetchBookings, rooms: roomsData = [] } = useBookings(); // Updated destructuring
     const { currentUser } = useAuth();
     const prefilled = location.state?.prefilled || {};
 
@@ -30,6 +28,11 @@ const BookingPage = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Fetch bookings on component mount to ensure latest data for conflict checking
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
+
     const selectedRoom = roomsData.find(r => r.id === formData.room);
 
     const handleChange = (e) => {
@@ -46,7 +49,7 @@ const BookingPage = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => { // Made handleSubmit async
         e.preventDefault();
         setError(null);
         setSuggestions([]);
@@ -63,11 +66,14 @@ const BookingPage = () => {
             return;
         }
 
+        // Fetch latest bookings before conflict check
+        const latestBookings = await fetchBookings();
+
         const conflictCheck = searchRooms({
             date: parsedDate,
             startTime: formData.startTime,
             endTime: formData.endTime,
-        }, roomsData, bookings);
+        }, roomsData, latestBookings); // Use latestBookings for conflict check
 
         const targetRoom = conflictCheck.find(r => r.id === formData.room);
         const isRoomAvailable = targetRoom && targetRoom.isAvailable;
@@ -81,8 +87,7 @@ const BookingPage = () => {
                     startTime: formData.startTime,
                     endTime: formData.endTime,
                     building: selectedRoom.building
-                }, roomsData, bookings);
-
+                }, roomsData, latestBookings); // Use latestBookings for alternatives
 
                 setSuggestions(alternatives);
             }
@@ -91,21 +96,29 @@ const BookingPage = () => {
 
         setIsSubmitting(true);
 
-
         const newBooking = {
             roomId: formData.room,
             date: formData.date,
             time_slot: `${format(new Date(`2000-01-01T${formData.startTime}`), 'hh:mm a')} - ${format(new Date(`2000-01-01T${formData.endTime}`), 'hh:mm a')}`,
+            startTime: formData.startTime, // Added for DynamoDB
+            endTime: formData.endTime,     // Added for DynamoDB
             organization: formData.orgName,
-            eventName: formData.eventName // Note: reservations.json structure might not have eventName, but we can add it
+            eventName: formData.eventName
         };
 
-        setTimeout(() => {
-            addBooking(newBooking);
+        try {
+            await addBooking(newBooking);
             console.log('Booking Submitted:', newBooking);
-            setIsSubmitting(false);
             navigate('/');
-        }, 1000);
+        } catch (err) {
+            if (err.status === 409) { // Conflict error from backend
+                setError(err.message);
+            } else {
+                setError('Something went wrong. Please try again.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (

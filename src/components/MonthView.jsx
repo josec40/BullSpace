@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 
 const MonthView = ({ currentDate, bookings, onDateClick }) => {
     const { currentUser } = useAuth();
-
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart);
@@ -14,6 +13,7 @@ const MonthView = ({ currentDate, bookings, onDateClick }) => {
 
     const getBookingsForDay = (day) => {
         return bookings.filter(b =>
+
             isSameDay(parse(b.date, 'yyyy-MM-dd', new Date()), day)
         );
     };
@@ -24,7 +24,6 @@ const MonthView = ({ currentDate, bookings, onDateClick }) => {
         }
         return 'Reserved';
     };
-
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">

@@ -5,7 +5,7 @@ import { Building2, MapPin, Users, ArrowLeft } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { buildingCoordinates } from '../data/coordinates';
-import roomsData from '../data/rooms.json';
+import { useBookings } from '../context/BookingContext';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -36,6 +36,7 @@ const customIcon = new L.divIcon({
 
 const MapView = () => {
     const [selectedBuilding, setSelectedBuilding] = useState(null);
+    const { rooms: roomsData = [] } = useBookings();
     const roomsByBuilding = useMemo(() => {
         const grouped = {};
         roomsData.forEach(room => {

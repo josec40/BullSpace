@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "BullSpace \u2014 USF Room Reservation API"
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 10
+    MemorySize: 256
+    Environment:
+      Variables:
+        TABLE_NAME:
+          Ref: BullSpaceTable
+    Architectures:
+    - x86_64
+Resources:
+  BullSpaceTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: BullSpaceTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: PK
+        AttributeType: S
+      - AttributeName: SK
+        AttributeType: S
+      - AttributeName: GSI1PK
+        AttributeType: S
+      - AttributeName: GSI1SK
+        AttributeType: S
+      KeySchema:
+      - AttributeName: PK
+        KeyType: HASH
+      - AttributeName: SK
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: GSI1
+        KeySchema:
+        - AttributeName: GSI1PK
+          KeyType: HASH
+        - AttributeName: GSI1SK
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: GSI2
+        KeySchema:
+        - AttributeName: SK
+          KeyType: HASH
+        - AttributeName: PK
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+  BullSpaceApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      CorsConfiguration:
+        AllowOrigins:
+        - '*'
+        AllowHeaders:
+        - Content-Type
+        - Authorization
+        AllowMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+  GetRoomsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/rooms.getRooms
+      CodeUri: GetRoomsFunction
+      Description: List all rooms or get a single room by ID
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: BullSpaceTable
+      Events:
+        GetAllRooms:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: BullSpaceApi
+            Path: /rooms
+            Method: GET
+        GetSingleRoom:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: BullSpaceApi
+            Path: /rooms/{roomId}
+            Method: GET
+    Metadata:
+      SamResourceId: GetRoomsFunction
+  GetBookingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/bookings.getBookings
+      CodeUri: GetBookingsFunction
+      Description: Get bookings by room+date or all bookings for a date
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: BullSpaceTable
+      Events:
+        GetBookingsByDate:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: BullSpaceApi
+            Path: /bookings
+            Method: GET
+    Metadata:
+      SamResourceId: GetBookingsFunction
+  CreateBookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/bookings.createBooking
+      CodeUri: CreateBookingFunction
+      Description: Create a new booking with conflict detection
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: BullSpaceTable
+      Events:
+        CreateBooking:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: BullSpaceApi
+            Path: /bookings
+            Method: POST
+    Metadata:
+      SamResourceId: CreateBookingFunction
+Outputs:
+  ApiEndpoint:
+    Description: HTTP API endpoint URL
+    Value:
+      Fn::Sub: https://${BullSpaceApi}.execute-api.${AWS::Region}.amazonaws.com/prod
+  TableName:
+    Description: DynamoDB table name
+    Value:
+      Ref: BullSpaceTable

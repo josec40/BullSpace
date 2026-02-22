@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, MapPin, Users, Calendar, Clock, ArrowRight, Filter, BookOpen, AlertCircle } from 'lucide-react';
-import roomsData from '../data/rooms.json';
 import { validateBookingDate } from '../utils/validationUtils';
 import { parse } from 'date-fns';
 import { searchRooms } from '../utils/bookingUtils';
@@ -9,7 +8,7 @@ import { useBookings } from '../context/BookingContext';
 
 const SearchPage = () => {
     const navigate = useNavigate();
-    const { bookings } = useBookings();
+    const { bookings, rooms: roomsData = [] } = useBookings();
     const [filters, setFilters] = useState({
         building: '',
         type: '',
@@ -28,7 +27,7 @@ const SearchPage = () => {
                 const minute = j.toString().padStart(2, '0');
                 const displayHour = i % 12 || 12;
                 const ampm = i < 12 ? 'AM' : 'PM';
-                options.push({ value: `${hour}:${minute}`, label: `${displayHour}:${minute} ${ampm}` });
+                options.push({ value: `${hour}:${minute} `, label: `${displayHour}:${minute} ${ampm} ` });
             }
         }
         return options;
@@ -193,7 +192,7 @@ const SearchPage = () => {
                                         className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
                                     >
                                         <option value="">Select Time</option>
-                                        {timeOptions.map(opt => <option key={`start-${opt.value}`} value={opt.value}>{opt.label}</option>)}
+                                        {timeOptions.map(opt => <option key={`start - ${opt.value} `} value={opt.value}>{opt.label}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -207,7 +206,7 @@ const SearchPage = () => {
                                         className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
                                     >
                                         <option value="">Select Time</option>
-                                        {timeOptions.map(opt => <option key={`end-${opt.value}`} value={opt.value}>{opt.label}</option>)}
+                                        {timeOptions.map(opt => <option key={`end - ${opt.value} `} value={opt.value}>{opt.label}</option>)}
                                     </select>
                                 </div>
                             </div>

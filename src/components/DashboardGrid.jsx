@@ -29,7 +29,6 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
         }
         return 'Reserved';
     };
-
     return (
         <div className="overflow-x-auto shadow-xl shadow-slate-200/60 rounded-2xl border border-slate-200 bg-white">
             <div className="min-w-max">

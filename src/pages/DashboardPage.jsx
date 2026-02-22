@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import roomsData from '../data/rooms.json';
 import { getGridData, getEnrichedBookings } from '../utils/bookingUtils';
 import DashboardGrid from '../components/DashboardGrid';
 import DateNavigator from '../components/DateNavigator';
@@ -14,14 +13,18 @@ import { useAuth } from '../context/AuthContext';
 
 const DashboardPage = () => {
     const navigate = useNavigate();
-    const { bookings: rawBookings } = useBookings();
+    const { bookings: rawBookings, rooms: roomsData = [], loadBookings } = useBookings();
     const { currentUser, logout } = useAuth();
     const [gridData, setGridData] = useState({ rooms: [], timeHeaders: [], dayBookings: [] });
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentView, setCurrentView] = useState('day');
 
+    // Fetch bookings for the current date from the API
+    useEffect(() => {
+        if (loadBookings) loadBookings(currentDate);
+    }, [currentDate, loadBookings]);
 
-    const bookings = useMemo(() => getEnrichedBookings(rawBookings, roomsData), [rawBookings]);
+    const bookings = useMemo(() => getEnrichedBookings(rawBookings, roomsData), [rawBookings, roomsData]);
 
     useEffect(() => {
 
