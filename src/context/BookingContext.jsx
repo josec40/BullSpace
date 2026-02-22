@@ -56,6 +56,18 @@ export const BookingProvider = ({ children }) => {
         }
     }, []);
 
+    // ── Fetch all bookings (for Search page) ───────────
+    const fetchBookings = useCallback(async () => {
+        if (!API_CONFIGURED) return fallbackReservations;
+        try {
+            return bookings;
+        } catch (err) {
+            console.error(err);
+            return bookings;
+        }
+    }, [bookings]);
+
+
     // ── Create a new booking ─────────────────────────
     const addBooking = useCallback(async (newBooking) => {
         if (!API_CONFIGURED) {
@@ -91,6 +103,7 @@ export const BookingProvider = ({ children }) => {
         error,
         loadBookings,
         addBooking,
+        fetchBookings,
     };
 
     return (

@@ -6,21 +6,22 @@ import DateNavigator from '../components/DateNavigator';
 import ViewSwitcher from '../components/ViewSwitcher';
 import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
-import { Calendar, Plus, Building2, Search } from 'lucide-react';
+import { Calendar, Plus, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
+import { useAuth } from '../context/AuthContext';
 
 const DashboardPage = () => {
     const navigate = useNavigate();
-    const { bookings: rawBookings, rooms: roomsData, loadBookings } = useBookings();
+    const { bookings: rawBookings, rooms: roomsData = [], loadBookings } = useBookings();
+    const { currentUser, logout } = useAuth();
     const [gridData, setGridData] = useState({ rooms: [], timeHeaders: [], dayBookings: [] });
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentView, setCurrentView] = useState('day');
-    const [selectedRoom, setSelectedRoom] = useState(roomsData[0]);
 
     // Fetch bookings for the current date from the API
     useEffect(() => {
-        loadBookings(currentDate);
+        if (loadBookings) loadBookings(currentDate);
     }, [currentDate, loadBookings]);
 
     const bookings = useMemo(() => getEnrichedBookings(rawBookings, roomsData), [rawBookings, roomsData]);
@@ -48,11 +49,16 @@ const DashboardPage = () => {
                             B
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white tracking-tight leading-none">Bullspace</h1>
+                            <h1 className="text-xl font-bold text-white tracking-tight leading-none">BullSpace</h1>
                             <p className="text-xs text-emerald-50 font-medium">USF Room Reservation</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        {currentUser && (
+                            <div className="text-white mr-4 text-sm hidden md:block">
+                                Hello, <span className="font-bold">{currentUser.name}</span>
+                            </div>
+                        )}
                         <Link
                             to="/map"
                             className="bg-white border-2 border-white text-emerald-600 hover:bg-emerald-50 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2"
@@ -67,11 +73,43 @@ const DashboardPage = () => {
                             <Plus size={18} />
                             Book a Room
                         </button>
+                        <button
+                            onClick={logout}
+                            className="text-white hover:text-emerald-100 text-sm font-medium transition-colors ml-2"
+                        >
+                            Logout
+                        </button>
                     </div>
                 </div>
             </header>
 
             <main className="container mx-auto px-4 py-8">
+                {currentUser?.role === 'org' && (
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4">My Upcoming Events</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {bookings.filter(b => b.organization === currentUser.name).slice(0, 3).map((b, i) => (
+                                <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <p className="font-bold text-slate-800 text-lg">{b.room_name}</p>
+                                            <p className="text-sm text-emerald-600 font-medium">{b.date}</p>
+                                        </div>
+                                        <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full font-bold">
+                                            {b.status}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-500 mt-2">{b.time_slot}</p>
+                                </div>
+                            ))}
+                            {bookings.filter(b => b.organization === currentUser.name).length === 0 && (
+                                <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-slate-100 rounded-xl p-6 text-center text-slate-500">
+                                    No upcoming events found for your organization.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
                     <div>
@@ -83,23 +121,7 @@ const DashboardPage = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 items-center">
-                        {/* Room Selector for Week/Month Views */}
-                        {currentView !== 'day' && (
-                            <div className="relative">
-                                <Building2 className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                                <select
-                                    value={selectedRoom.id}
-                                    onChange={(e) => setSelectedRoom(roomsData.find(r => r.id === e.target.value))}
-                                    className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                >
-                                    {roomsData.map(room => (
-                                        <option key={room.id} value={room.id}>{room.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        <DateNavigator currentDate={currentDate} onDateChange={handleDateChange} />
+                        <DateNavigator currentDate={currentDate} onDateChange={handleDateChange} currentView={currentView} />
                         <ViewSwitcher currentView={currentView} onViewChange={handleViewChange} />
                     </div>
                 </div>
@@ -135,7 +157,6 @@ const DashboardPage = () => {
                     <WeekView
                         currentDate={currentDate}
                         bookings={bookings}
-                        room={selectedRoom}
                     />
                 )}
 
@@ -143,7 +164,6 @@ const DashboardPage = () => {
                     <MonthView
                         currentDate={currentDate}
                         bookings={bookings}
-                        room={selectedRoom}
                         onDateClick={(date) => {
                             setCurrentDate(date);
                             setCurrentView('day');

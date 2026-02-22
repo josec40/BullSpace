@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, Users, Calendar, Clock, ArrowRight, Filter, BookOpen } from 'lucide-react';
-import { searchRooms } from '../utils/bookingUtils';
+import { Search, MapPin, Users, Calendar, Clock, ArrowRight, Filter, BookOpen, AlertCircle } from 'lucide-react';
 import { validateBookingDate } from '../utils/validationUtils';
+import { parse } from 'date-fns';
+import { searchRooms } from '../utils/bookingUtils';
 import { useBookings } from '../context/BookingContext';
 
 const SearchPage = () => {
     const navigate = useNavigate();
-    const { bookings, rooms: roomsData } = useBookings();
+    const { bookings, rooms: roomsData = [] } = useBookings();
     const [filters, setFilters] = useState({
         building: '',
         type: '',
@@ -16,6 +17,22 @@ const SearchPage = () => {
         startTime: '',
         endTime: ''
     });
+
+    const generateTimeOptions = () => {
+        const options = [];
+        for (let i = 8; i <= 20; i++) {
+            for (let j = 0; j < 60; j += 30) {
+                if (i === 20 && j > 0) continue;
+                const hour = i.toString().padStart(2, '0');
+                const minute = j.toString().padStart(2, '0');
+                const displayHour = i % 12 || 12;
+                const ampm = i < 12 ? 'AM' : 'PM';
+                options.push({ value: `${hour}:${minute} `, label: `${displayHour}:${minute} ${ampm} ` });
+            }
+        }
+        return options;
+    };
+    const timeOptions = generateTimeOptions();
 
     const [results, setResults] = useState([]);
     const [hasSearched, setHasSearched] = useState(false);
@@ -36,7 +53,9 @@ const SearchPage = () => {
             return;
         }
 
-        const dateError = validateBookingDate(new Date(filters.date));
+        const parsedSearchDate = parse(filters.date, 'yyyy-MM-dd', new Date());
+
+        const dateError = validateBookingDate(parsedSearchDate);
         if (dateError) {
             setError(dateError);
             return;
@@ -44,7 +63,7 @@ const SearchPage = () => {
 
         const foundRooms = searchRooms({
             ...filters,
-            date: new Date(filters.date)
+            date: parsedSearchDate
         }, roomsData, bookings);
 
         setResults(foundRooms);
@@ -166,25 +185,29 @@ const SearchPage = () => {
                                     <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                                         <Clock size={16} className="text-emerald-600" /> From
                                     </label>
-                                    <input
-                                        type="time"
+                                    <select
                                         name="startTime"
                                         value={filters.startTime}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                                    />
+                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                                    >
+                                        <option value="">Select Time</option>
+                                        {timeOptions.map(opt => <option key={`start - ${opt.value} `} value={opt.value}>{opt.label}</option>)}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                                         <Clock size={16} className="text-emerald-600" /> Until
                                     </label>
-                                    <input
-                                        type="time"
+                                    <select
                                         name="endTime"
                                         value={filters.endTime}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                                    />
+                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                                    >
+                                        <option value="">Select Time</option>
+                                        {timeOptions.map(opt => <option key={`end - ${opt.value} `} value={opt.value}>{opt.label}</option>)}
+                                    </select>
                                 </div>
                             </div>
 
@@ -225,27 +248,33 @@ const SearchPage = () => {
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {results.map(room => (
-                                        <div key={room.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow flex flex-col justify-between">
+                                        <div key={room.id} className={`p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow flex flex-col justify-between ${room.isAvailable ? 'bg-white border-slate-200' : 'bg-rose-50 border-rose-200'}`}>
                                             <div>
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div>
-                                                        <h4 className="text-lg font-bold text-slate-800">{room.name}</h4>
-                                                        <p className="text-sm text-slate-500">{room.building}</p>
+                                                        <h4 className={`text-lg font-bold ${room.isAvailable ? 'text-slate-800' : 'text-rose-900'}`}>{room.name}</h4>
+                                                        <p className={`text-sm ${room.isAvailable ? 'text-slate-500' : 'text-rose-600'}`}>{room.building}</p>
                                                     </div>
-                                                    <span className="px-2 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md uppercase tracking-wide">
+                                                    <span className={`px-2 py-1 text-xs font-bold rounded-md uppercase tracking-wide ${room.isAvailable ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-100 text-rose-800'}`}>
                                                         {room.type}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-4 text-sm text-slate-600 mb-4">
+                                                <div className={`flex items-center gap-4 text-sm mb-4 ${room.isAvailable ? 'text-slate-600' : 'text-rose-700'}`}>
                                                     <span className="flex items-center gap-1"><Users size={14} /> {room.capacity} Seats</span>
                                                     <span className="flex items-center gap-1"><BookOpen size={14} /> {room.features.join(', ')}</span>
                                                 </div>
+                                                {!room.isAvailable && room.conflict && (
+                                                    <div className="text-sm font-bold text-rose-700 mb-4 flex items-center gap-1">
+                                                        <AlertCircle size={16} /> Taken ({room.conflict.time_slot})
+                                                    </div>
+                                                )}
                                             </div>
                                             <button
                                                 onClick={() => handleBook(room)}
-                                                className="w-full mt-4 bg-white border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                                disabled={!room.isAvailable}
+                                                className={`w-full mt-4 border-2 font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${room.isAvailable ? 'bg-white border-emerald-600 text-emerald-600 hover:bg-emerald-50' : 'bg-rose-100 border-rose-300 text-rose-500 cursor-not-allowed opacity-50'}`}
                                             >
-                                                Book This Room <ArrowRight size={16} />
+                                                {room.isAvailable ? 'Book This Room' : 'Unavailable'} <ArrowRight size={16} />
                                             </button>
                                         </div>
                                     ))}

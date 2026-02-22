@@ -93,34 +93,6 @@ export const getGridData = (bookings, date = new Date()) => {
     return { rooms, timeHeaders, dayBookings };
 };
 
-export const findAvailableRoom = (bookings, conflictingTimeSlot, currentRoom, dateStr) => {
-    const { start: conflictStart, end: conflictEnd } = parseTimeSlot(conflictingTimeSlot);
-    const allRooms = [...new Set(bookings.map(b => b.room_name))];
-    const candidateRooms = allRooms.filter(r => r !== currentRoom);
-
-    for (const room of candidateRooms) {
-        const roomBookings = bookings.filter(b => b.room_name === room && b.date === dateStr);
-        let isFree = true;
-
-        for (const booking of roomBookings) {
-            const { start, end } = parseTimeSlot(booking.time_slot);
-            if (isBefore(conflictStart, end) && isAfter(conflictEnd, start)) {
-                isFree = false;
-                break;
-            }
-        }
-
-        if (isFree) {
-            const roomInfo = bookings.find(b => b.room_name === room);
-            return {
-                room_name: room,
-                building: roomInfo ? roomInfo.building : 'Unknown Building'
-            };
-        }
-    }
-
-    return null;
-};
 
 export const searchRooms = (criteria, rooms, bookings) => {
     const { building, type, capacity, date, startTime, endTime } = criteria;
@@ -145,7 +117,7 @@ export const searchRooms = (criteria, rooms, bookings) => {
         const searchStart = parse(startTime, 'HH:mm', date);
         const searchEnd = parse(endTime, 'HH:mm', date);
 
-        filteredRooms = filteredRooms.filter(room => {
+        filteredRooms = filteredRooms.map(room => {
             // Find bookings for this room on this date
             const roomBookings = bookings.filter(b =>
                 b.roomId === room.id &&
@@ -153,6 +125,7 @@ export const searchRooms = (criteria, rooms, bookings) => {
             );
 
             // Check for overlaps
+            let conflictingBooking = null;
             const hasConflict = roomBookings.some(booking => {
                 const { start: bookingStart, end: bookingEnd } = parseTimeSlot(booking.time_slot);
                 // Overlap logic: (StartA < EndB) and (EndA > StartB)
@@ -166,11 +139,25 @@ export const searchRooms = (criteria, rooms, bookings) => {
                 const bStart = setDate(setMonth(setYear(bookingStart, date.getFullYear()), date.getMonth()), date.getDate());
                 const bEnd = setDate(setMonth(setYear(bookingEnd, date.getFullYear()), date.getMonth()), date.getDate());
 
-                return isBefore(searchStart, bEnd) && isAfter(searchEnd, bStart);
+                if (isBefore(searchStart, bEnd) && isAfter(searchEnd, bStart)) {
+                    conflictingBooking = booking;
+                    return true;
+                }
+                return false;
             });
 
-            return !hasConflict;
+            return {
+                ...room,
+                isAvailable: !hasConflict,
+                conflict: conflictingBooking
+            };
         });
+    } else {
+        filteredRooms = filteredRooms.map(room => ({
+            ...room,
+            isAvailable: true,
+            conflict: null
+        }));
     }
 
     return filteredRooms;

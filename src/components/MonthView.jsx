@@ -1,7 +1,9 @@
 import React from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, parse } from 'date-fns';
+import { useAuth } from '../context/AuthContext';
 
-const MonthView = ({ currentDate, bookings, room, onDateClick }) => {
+const MonthView = ({ currentDate, bookings, onDateClick }) => {
+    const { currentUser } = useAuth();
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart);
@@ -11,17 +13,23 @@ const MonthView = ({ currentDate, bookings, room, onDateClick }) => {
 
     const getBookingsForDay = (day) => {
         return bookings.filter(b =>
-            b.room_name === room.name &&
+
             isSameDay(parse(b.date, 'yyyy-MM-dd', new Date()), day)
         );
     };
 
+    const getDisplayName = (booking) => {
+        if (currentUser?.role === 'admin' || currentUser?.name === booking.organization) {
+            return booking.organization;
+        }
+        return 'Reserved';
+    };
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                 <div>
-                    <h3 className="font-bold text-lg text-slate-800">{room.name} - {format(currentDate, 'MMMM yyyy')}</h3>
-                    <p className="text-sm text-slate-500">{room.building}</p>
+                    <h3 className="font-bold text-lg text-slate-800">{format(currentDate, 'MMMM yyyy')}</h3>
+                    <p className="text-sm text-slate-500">All Rooms</p>
                 </div>
             </div>
 
@@ -55,8 +63,8 @@ const MonthView = ({ currentDate, bookings, room, onDateClick }) => {
                             </div>
                             <div className="mt-2 space-y-1">
                                 {dayBookings.slice(0, 3).map((booking, idx) => (
-                                    <div key={idx} className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded truncate border border-indigo-100">
-                                        {booking.organization}
+                                    <div key={idx} className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded truncate border border-indigo-100" title={`${getDisplayName(booking)} in ${booking.room_name}`}>
+                                        <span className="font-bold">{booking.room_name}</span>: {getDisplayName(booking)}
                                     </div>
                                 ))}
                                 {dayBookings.length > 3 && (

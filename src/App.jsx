@@ -1,23 +1,38 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { BookingProvider } from './context/BookingContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import DashboardPage from './pages/DashboardPage';
 import BookingPage from './pages/BookingPage';
 import SearchPage from './pages/SearchPage';
 import MapView from './pages/MapView';
+import LoginPage from './pages/LoginPage';
+
+// Protected Route Wrapper
+const ProtectedRoute = ({ children }) => {
+  const { currentUser } = useAuth();
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 function App() {
   return (
-    <BookingProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/book" element={<BookingPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/map" element={<MapView />} />
-        </Routes>
-      </Router>
-    </BookingProvider>
+    <AuthProvider>
+      <BookingProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/book" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+            <Route path="/map" element={<ProtectedRoute><MapView /></ProtectedRoute>} />
+          </Routes>
+        </Router>
+      </BookingProvider>
+    </AuthProvider>
   );
 }
 

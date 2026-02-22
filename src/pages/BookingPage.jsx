@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { parse, format } from 'date-fns';
 import { ArrowLeft, Check, Users, Building, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { validateBookingDate } from '../utils/validationUtils';
 import { useBookings } from '../context/BookingContext';
 import { searchRooms } from '../utils/bookingUtils';
+import { useAuth } from '../context/AuthContext';
 
 const BookingPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { bookings, rooms: roomsData, addBooking } = useBookings();
+    const { addBooking, fetchBookings, rooms: roomsData = [] } = useBookings(); // Updated destructuring
+    const { currentUser } = useAuth();
     const prefilled = location.state?.prefilled || {};
 
     const [formData, setFormData] = useState({
-        orgName: '',
+        orgName: currentUser?.role === 'org' ? currentUser.name : '',
         eventName: '',
         occupancy: '',
         date: prefilled.date || '',
@@ -25,6 +27,11 @@ const BookingPage = () => {
     const [error, setError] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Fetch bookings on component mount to ensure latest data for conflict checking
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
 
     const selectedRoom = roomsData.find(r => r.id === formData.room);
 
@@ -42,7 +49,7 @@ const BookingPage = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => { // Made handleSubmit async
         e.preventDefault();
         setError(null);
         setSuggestions([]);
@@ -59,13 +66,17 @@ const BookingPage = () => {
             return;
         }
 
+        // Fetch latest bookings before conflict check
+        const latestBookings = await fetchBookings();
+
         const conflictCheck = searchRooms({
             date: parsedDate,
             startTime: formData.startTime,
             endTime: formData.endTime,
-        }, roomsData, bookings);
+        }, roomsData, latestBookings); // Use latestBookings for conflict check
 
-        const isRoomAvailable = conflictCheck.some(r => r.id === formData.room);
+        const targetRoom = conflictCheck.find(r => r.id === formData.room);
+        const isRoomAvailable = targetRoom && targetRoom.isAvailable;
 
         if (!isRoomAvailable) {
             setError("Room taken at this time.");
@@ -76,8 +87,7 @@ const BookingPage = () => {
                     startTime: formData.startTime,
                     endTime: formData.endTime,
                     building: selectedRoom.building
-                }, roomsData, bookings);
-
+                }, roomsData, latestBookings); // Use latestBookings for alternatives
 
                 setSuggestions(alternatives);
             }
@@ -89,9 +99,11 @@ const BookingPage = () => {
         const newBooking = {
             roomId: formData.room,
             date: formData.date,
-            startTime: formData.startTime,
-            endTime: formData.endTime,
+            time_slot: `${format(new Date(`2000-01-01T${formData.startTime}`), 'hh:mm a')} - ${format(new Date(`2000-01-01T${formData.endTime}`), 'hh:mm a')}`,
+            startTime: formData.startTime, // Added for DynamoDB
+            endTime: formData.endTime,     // Added for DynamoDB
             organization: formData.orgName,
+            eventName: formData.eventName
         };
 
         try {
@@ -99,7 +111,7 @@ const BookingPage = () => {
             console.log('Booking Submitted:', newBooking);
             navigate('/');
         } catch (err) {
-            if (err.status === 409) {
+            if (err.status === 409) { // Conflict error from backend
                 setError(err.message);
             } else {
                 setError('Something went wrong. Please try again.');
@@ -185,7 +197,8 @@ const BookingPage = () => {
                                         type="text"
                                         name="orgName"
                                         required
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                                        readOnly={currentUser?.role === 'org'}
+                                        className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${currentUser?.role === 'org' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`}
                                         placeholder="e.g. Society of Engineers"
                                         value={formData.orgName}
                                         onChange={handleChange}
@@ -244,7 +257,6 @@ const BookingPage = () => {
                                             onChange={handleChange}
                                         />
                                     </div>
-
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>

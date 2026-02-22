@@ -35,8 +35,8 @@ const customIcon = new L.divIcon({
 });
 
 const MapView = () => {
-    const { rooms: roomsData } = useBookings();
     const [selectedBuilding, setSelectedBuilding] = useState(null);
+    const { rooms: roomsData = [] } = useBookings();
     const roomsByBuilding = useMemo(() => {
         const grouped = {};
         roomsData.forEach(room => {

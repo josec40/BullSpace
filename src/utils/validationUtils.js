@@ -1,6 +1,6 @@
 import { isAfter, startOfDay } from 'date-fns';
 
-export const isFutureDate = (date) => {
+const isFutureDate = (date) => {
     const today = startOfDay(new Date());
     return isAfter(startOfDay(date), today) || startOfDay(date).getTime() === today.getTime();
 };
