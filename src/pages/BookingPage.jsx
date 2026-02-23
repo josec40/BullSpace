@@ -28,10 +28,10 @@ const BookingPage = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch bookings on component mount to ensure latest data for conflict checking
+    // Fetch bookings when date changes to ensure latest data for conflict checking
     useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
+        if (formData.date) fetchBookings(formData.date);
+    }, [formData.date, fetchBookings]);
 
     const selectedRoom = roomsData.find(r => r.id === formData.room);
 
@@ -67,7 +67,7 @@ const BookingPage = () => {
         }
 
         // Fetch latest bookings before conflict check
-        const latestBookings = await fetchBookings();
+        const latestBookings = await fetchBookings(formData.date);
 
         const conflictCheck = searchRooms({
             date: parsedDate,

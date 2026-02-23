@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { fetchRooms, fetchBookingsByDate, createBooking as apiCreateBooking } from '../services/api';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval } from 'date-fns';
 
 // Fallback data for local dev without the backend
 import fallbackRooms from '../data/rooms.json';
@@ -56,16 +56,56 @@ export const BookingProvider = ({ children }) => {
         }
     }, []);
 
-    // ── Fetch all bookings (for Search page) ───────────
-    const fetchBookings = useCallback(async () => {
+    // ── Fetch bookings for a date range (for Week/Month views) ───────
+    const loadBookingsForRange = useCallback(async (startDate, endDate) => {
+        if (!API_CONFIGURED) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            const days = eachDayOfInterval({ start: startDate, end: endDate });
+            const dateStrings = days.map(d => format(d, 'yyyy-MM-dd'));
+
+            // Batch requests (7 at a time) to avoid overwhelming API/browser
+            const BATCH_SIZE = 7;
+            const allResults = [];
+            for (let i = 0; i < dateStrings.length; i += BATCH_SIZE) {
+                const batch = dateStrings.slice(i, i + BATCH_SIZE);
+                const batchResults = await Promise.all(
+                    batch.map(dateStr => fetchBookingsByDate(dateStr).catch(() => []))
+                );
+                allResults.push(...batchResults);
+            }
+
+            // Merge & deduplicate by booking id
+            const merged = allResults.flat();
+            const unique = [...new Map(merged.map(b => [b.id, b])).values()];
+            setBookings(unique);
+        } catch (err) {
+            console.warn('Range fetch error:', err.message);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // ── Fetch all bookings for a date (used by BookingPage for conflict check) ──
+    const fetchBookings = useCallback(async (date) => {
         if (!API_CONFIGURED) return fallbackReservations;
         try {
-            return bookings;
+            const dateStr = typeof date === 'string'
+                ? date
+                : date instanceof Date
+                    ? format(date, 'yyyy-MM-dd')
+                    : format(new Date(), 'yyyy-MM-dd');
+            const data = await fetchBookingsByDate(dateStr);
+            setBookings(data);
+            return data;
         } catch (err) {
-            console.error(err);
-            return bookings;
+            console.error('fetchBookings error:', err);
+            return [];
         }
-    }, [bookings]);
+    }, []);
 
 
     // ── Create a new booking ─────────────────────────
@@ -102,6 +142,7 @@ export const BookingProvider = ({ children }) => {
         loading,
         error,
         loadBookings,
+        loadBookingsForRange,
         addBooking,
         fetchBookings,
     };

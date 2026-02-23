@@ -27,7 +27,7 @@ const SearchPage = () => {
                 const minute = j.toString().padStart(2, '0');
                 const displayHour = i % 12 || 12;
                 const ampm = i < 12 ? 'AM' : 'PM';
-                options.push({ value: `${hour}:${minute} `, label: `${displayHour}:${minute} ${ampm} ` });
+                options.push({ value: `${hour}:${minute}`, label: `${displayHour}:${minute} ${ampm}` });
             }
         }
         return options;

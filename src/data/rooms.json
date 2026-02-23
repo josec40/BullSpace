@@ -62,16 +62,6 @@
         ]
     },
     {
-        "id": "lib-201",
-        "name": "LIB 201",
-        "building": "Library",
-        "capacity": 10,
-        "type": "Conference Room",
-        "features": [
-            "Whiteboard"
-        ]
-    },
-    {
         "id": "enb-110",
         "name": "ENB 110",
         "building": "Engineering Building II",
@@ -134,6 +124,221 @@
             "Computers",
             "Study Pods"
         ]
+    },
+    {
+        "id": "lib-305",
+        "name": "LIB 305",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 3
+    },
+    {
+        "id": "lib-306",
+        "name": "LIB 306",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 3
+    },
+    {
+        "id": "lib-307",
+        "name": "LIB 307",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 3
+    },
+    {
+        "id": "lib-308",
+        "name": "LIB 308",
+        "building": "Library",
+        "capacity": 6,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 3
+    },
+    {
+        "id": "lib-356",
+        "name": "LIB 356",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 3
+    },
+    {
+        "id": "lib-357",
+        "name": "LIB 357",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 3
+    },
+    {
+        "id": "lib-358",
+        "name": "LIB 358",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 3
+    },
+    {
+        "id": "lib-436",
+        "name": "LIB 436",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 4
+    },
+    {
+        "id": "lib-437",
+        "name": "LIB 437",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 4
+    },
+    {
+        "id": "lib-438",
+        "name": "LIB 438",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 4
+    },
+    {
+        "id": "lib-440",
+        "name": "LIB 440",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 4
+    },
+    {
+        "id": "lib-441",
+        "name": "LIB 441",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 4
+    },
+    {
+        "id": "lib-442",
+        "name": "LIB 442",
+        "building": "Library",
+        "capacity": 4,
+        "type": "Group Study Room",
+        "features": [
+            "Whiteboard"
+        ],
+        "floor": 4
+    },
+    {
+        "id": "lib-514a",
+        "name": "LIB 514A",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
+    },
+    {
+        "id": "lib-514b",
+        "name": "LIB 514B",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
+    },
+    {
+        "id": "lib-514c",
+        "name": "LIB 514C",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
+    },
+    {
+        "id": "lib-514d",
+        "name": "LIB 514D",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
+    },
+    {
+        "id": "lib-520a",
+        "name": "LIB 520A",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
+    },
+    {
+        "id": "lib-520b",
+        "name": "LIB 520B",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
+    },
+    {
+        "id": "lib-520c",
+        "name": "LIB 520C",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
+    },
+    {
+        "id": "lib-520d",
+        "name": "LIB 520D",
+        "building": "Library",
+        "capacity": 2,
+        "type": "Quiet Study Room",
+        "features": [],
+        "floor": 5
     },
     {
         "id": "rec-pool",

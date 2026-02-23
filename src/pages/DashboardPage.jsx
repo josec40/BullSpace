@@ -7,22 +7,32 @@ import ViewSwitcher from '../components/ViewSwitcher';
 import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
 import { Calendar, Plus, Search } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardPage = () => {
     const navigate = useNavigate();
-    const { bookings: rawBookings, rooms: roomsData = [], loadBookings } = useBookings();
+    const { bookings: rawBookings, rooms: roomsData = [], loadBookings, loadBookingsForRange } = useBookings();
     const { currentUser, logout } = useAuth();
     const [gridData, setGridData] = useState({ rooms: [], timeHeaders: [], dayBookings: [] });
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentView, setCurrentView] = useState('day');
 
-    // Fetch bookings for the current date from the API
+    // Fetch bookings for the visible date range based on the current view
     useEffect(() => {
-        if (loadBookings) loadBookings(currentDate);
-    }, [currentDate, loadBookings]);
+        if (currentView === 'day') {
+            loadBookings(currentDate);
+        } else if (currentView === 'week') {
+            const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+            const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+            loadBookingsForRange(weekStart, weekEnd);
+        } else if (currentView === 'month') {
+            const monthStart = startOfMonth(currentDate);
+            const monthEnd = endOfMonth(currentDate);
+            loadBookingsForRange(monthStart, monthEnd);
+        }
+    }, [currentDate, currentView, loadBookings, loadBookingsForRange]);
 
     const bookings = useMemo(() => getEnrichedBookings(rawBookings, roomsData), [rawBookings, roomsData]);
 

@@ -30,7 +30,8 @@ export const getBookings = async (event) => {
                     TableName: TABLE_NAME,
                     IndexName: 'GSI1',
                     KeyConditionExpression: 'GSI1PK = :date',
-                    ExpressionAttributeValues: { ':date': date },
+                    FilterExpression: 'begins_with(SK, :skPrefix)',
+                    ExpressionAttributeValues: { ':date': date, ':skPrefix': 'BOOKING#' },
                 })
             );
             return { statusCode: 200, headers, body: JSON.stringify(Items.map(formatBooking)) };

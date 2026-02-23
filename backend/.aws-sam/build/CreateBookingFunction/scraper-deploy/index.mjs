@@ -22,27 +22,27 @@ const TABLE_NAME = process.env.TABLE_NAME || 'BullSpaceTable';
 
 // Map LibCal numeric itemIds → BullSpace room IDs
 const ITEM_ID_TO_ROOM = {
-    105593: 'lib-305',   // Group Study Room #305 (4 person, 3rd floor)
-    105594: 'lib-306',   // Group Study Room #306 (4 person, 3rd floor)
-    11355: 'lib-307',   // Group Study Room #307 (4 person, 3rd floor)
-    108082: 'lib-308',   // Large Group Study Room #308 (6 person, 3rd floor)
-    11357: 'lib-356',   // Group Study Room #356 (4 person, 3rd floor)
-    11358: 'lib-357',   // Group Study Room #357 (4 person, 3rd floor)
-    11359: 'lib-358',   // Group Study Room #358 (4 person, 3rd floor)
-    11361: 'lib-436',   // Group Study Room #436 (4 person, 4th floor)
-    11362: 'lib-437',   // Group Study Room #437 (4 person, 4th floor)
-    11364: 'lib-438',   // Group Study Room #438 (4 person, 4th floor)
-    11365: 'lib-440',   // Group Study Room #440 (4 person, 4th floor)
-    11366: 'lib-441',   // Group Study Room #441 (4 person, 4th floor)
-    11367: 'lib-442',   // Group Study Room #442 (4 person, 4th floor)
-    11548: 'lib-514a',  // Quiet Study Room 514A (2 person, 5th floor)
-    11549: 'lib-514b',  // Quiet Study Room 514B (2 person, 5th floor)
-    11550: 'lib-514c',  // Quiet Study Room 514C (2 person, 5th floor)
-    11551: 'lib-514d',  // Quiet Study Room 514D (2 person, 5th floor)
-    11552: 'lib-520a',  // Quiet Study Room 520A (2 person, 5th floor)
-    11553: 'lib-520b',  // Quiet Study Room 520B (2 person, 5th floor)
-    11555: 'lib-520c',  // Quiet Study Room 520C (2 person, 5th floor)
-    11556: 'lib-520d',  // Quiet Study Room 520D (2 person, 5th floor)
+    105593: 'lib-305',
+    105594: 'lib-306',
+    11355: 'lib-307',
+    11357: 'lib-308',
+    11358: 'lib-309',
+    11359: 'lib-310',
+    11361: 'lib-311',
+    11362: 'lib-312',
+    11364: 'lib-313',
+    11365: 'lib-314',
+    11366: 'lib-315',
+    11367: 'lib-316',
+    11548: 'lib-317',
+    11549: 'lib-318',
+    11550: 'lib-319',
+    11551: 'lib-320',
+    11552: 'lib-321',
+    11553: 'lib-322',
+    11555: 'lib-323',
+    11556: 'lib-324',
+    108082: 'lib-325',
 };
 
 // ── AWS clients (created outside handler for connection reuse) ────────
@@ -120,6 +120,8 @@ function buildDynamoItems(slots) {
             endTime: endTime.slice(0, 5),
             source: 'libcal',
             itemId: slot.itemId,
+            GSI1PK: date,
+            GSI1SK: `ROOM#${roomId}`,
         });
     }
 
@@ -166,13 +168,13 @@ export const handler = async (event) => {
     console.log('LibCal scraper invoked', JSON.stringify(event));
 
     const today = new Date();
-    const endDate = new Date(today);
-    endDate.setDate(endDate.getDate() + 7);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    console.log(`Fetching slots for ${toDateStr(today)} → ${toDateStr(endDate)}`);
+    console.log(`Fetching slots for ${toDateStr(today)} → ${toDateStr(tomorrow)}`);
 
     // 1 — Fetch from LibCal
-    const slots = await fetchSlots(today, endDate);
+    const slots = await fetchSlots(today, tomorrow);
     console.log(`Received ${slots.length} slot(s) from LibCal`);
 
     if (slots.length === 0) {
