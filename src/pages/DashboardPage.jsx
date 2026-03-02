@@ -6,7 +6,7 @@ import DateNavigator from '../components/DateNavigator';
 import ViewSwitcher from '../components/ViewSwitcher';
 import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
-import { Calendar, Plus, Search } from 'lucide-react';
+import { Calendar, Plus, Search, BookOpen } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
@@ -34,7 +34,13 @@ const DashboardPage = () => {
         }
     }, [currentDate, currentView, loadBookings, loadBookingsForRange]);
 
-    const bookings = useMemo(() => getEnrichedBookings(rawBookings, roomsData), [rawBookings, roomsData]);
+    // Filter rooms by role: orgs see only event spaces, admin sees all
+    const filteredRooms = useMemo(() => {
+        if (currentUser?.role === 'org') return roomsData.filter(r => r.building !== 'Library');
+        return roomsData;
+    }, [roomsData, currentUser]);
+
+    const bookings = useMemo(() => getEnrichedBookings(rawBookings, filteredRooms), [rawBookings, filteredRooms]);
 
     useEffect(() => {
 
@@ -68,6 +74,15 @@ const DashboardPage = () => {
                             <div className="text-white mr-4 text-sm hidden md:block">
                                 Hello, <span className="font-bold">{currentUser.name}</span>
                             </div>
+                        )}
+                        {currentUser?.role === 'admin' && (
+                            <Link
+                                to="/library"
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-blue-400"
+                            >
+                                <BookOpen size={16} />
+                                Library Rooms
+                            </Link>
                         )}
                         <Link
                             to="/map"

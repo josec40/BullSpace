@@ -5,10 +5,20 @@ import { validateBookingDate } from '../utils/validationUtils';
 import { parse } from 'date-fns';
 import { searchRooms } from '../utils/bookingUtils';
 import { useBookings } from '../context/BookingContext';
+import { useAuth } from '../context/AuthContext';
 
 const SearchPage = () => {
     const navigate = useNavigate();
-    const { bookings, rooms: roomsData = [] } = useBookings();
+    const { bookings, rooms: allRooms = [] } = useBookings();
+    const { currentUser } = useAuth();
+
+    // Filter rooms by role
+    const roomsData = allRooms.filter(r => {
+        if (currentUser?.role === 'student') return r.building === 'Library';
+        if (currentUser?.role === 'org') return r.building !== 'Library';
+        return true; // admin sees all
+    });
+
     const [filters, setFilters] = useState({
         building: '',
         type: '',
