@@ -1,4 +1,4 @@
-import { parse, isBefore, isAfter, isEqual, addMinutes, format, setHours, setMinutes, startOfDay, isSameDay, setDate, setMonth, setYear } from 'date-fns';
+import { parse, isBefore, isAfter, isEqual, addMinutes, format, setHours, setMinutes, setDate, setMonth, setYear } from 'date-fns';
 
 export const parseTimeSlot = (timeSlot) => {
     const [startStr, endStr] = timeSlot.split(' - ');
@@ -21,42 +21,6 @@ export const getEnrichedBookings = (reservations, rooms) => {
     });
 };
 
-export const detectConflicts = (bookings) => {
-    const conflicts = [];
-    const groupedByRoom = bookings.reduce((acc, booking) => {
-        if (!acc[booking.room_name]) {
-            acc[booking.room_name] = [];
-        }
-        acc[booking.room_name].push(booking);
-        return acc;
-    }, {});
-
-    Object.entries(groupedByRoom).forEach(([roomName, roomBookings]) => {
-        for (let i = 0; i < roomBookings.length; i++) {
-            for (let j = i + 1; j < roomBookings.length; j++) {
-                const b1 = roomBookings[i];
-                const b2 = roomBookings[j];
-
-                // Only check conflicts for the same date
-                if (b1.date !== b2.date) continue;
-
-                const t1 = parseTimeSlot(b1.time_slot);
-                const t2 = parseTimeSlot(b2.time_slot);
-
-                if (isBefore(t1.start, t2.end) && isAfter(t1.end, t2.start)) {
-                    conflicts.push({
-                        room_name: roomName,
-                        booking1: b1,
-                        booking2: b2,
-                        type: b1.system_source !== b2.system_source ? 'Cross-System Conflict' : 'Double Booking'
-                    });
-                }
-            }
-        }
-    });
-
-    return conflicts;
-};
 
 export const getGridData = (bookings, date = new Date()) => {
     // Filter bookings for the specific date

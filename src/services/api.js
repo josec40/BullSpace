@@ -21,13 +21,6 @@ export async function fetchRooms() {
     return res.json();
 }
 
-/** Fetch a single room by ID */
-export async function fetchRoom(roomId) {
-    const res = await fetch(`${API_BASE}/rooms/${roomId}`);
-    if (!res.ok) throw new Error(`Failed to fetch room ${roomId}: ${res.status}`);
-    return res.json();
-}
-
 // ─────────────────────────────────────────────────
 //  Bookings
 // ─────────────────────────────────────────────────
@@ -35,13 +28,6 @@ export async function fetchRoom(roomId) {
 /** Fetch all bookings for a given date (YYYY-MM-DD) */
 export async function fetchBookingsByDate(date) {
     const res = await fetch(`${API_BASE}/bookings?date=${date}`);
-    if (!res.ok) throw new Error(`Failed to fetch bookings: ${res.status}`);
-    return res.json();
-}
-
-/** Fetch bookings for a specific room on a specific date */
-export async function fetchBookingsByRoomDate(roomId, date) {
-    const res = await fetch(`${API_BASE}/bookings?date=${date}&roomId=${roomId}`);
     if (!res.ok) throw new Error(`Failed to fetch bookings: ${res.status}`);
     return res.json();
 }

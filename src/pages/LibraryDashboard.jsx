@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Clock, Users, ChevronRight, Calendar, LogOut, Search, Check, AlertCircle } from 'lucide-react';
+import { BookOpen, Clock, Users, Calendar, LogOut, Search, Check, AlertCircle, X } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +15,7 @@ const FLOOR_LABELS = {
 
 const LibraryDashboard = () => {
     const navigate = useNavigate();
-    const { rooms: allRooms = [], bookings, loadBookings } = useBookings();
+    const { rooms: allRooms = [], bookings, loadBookings, studentBookings = [], cancelBooking } = useBookings();
     const { currentUser, logout } = useAuth();
 
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -98,6 +98,17 @@ const LibraryDashboard = () => {
 
     const floors = Object.keys(roomsByFloor).sort((a, b) => Number(a) - Number(b));
 
+    // My reservations — student bookings belonging to this user
+    const myReservations = useMemo(() => {
+        if (!currentUser) return [];
+        return studentBookings
+            .filter(b => b.bookedBy === currentUser.name)
+            .map(b => {
+                const room = allRooms.find(r => r.id === b.roomId);
+                return { ...b, room };
+            });
+    }, [studentBookings, currentUser, allRooms]);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-sans text-white">
             {/* Header */}
@@ -137,6 +148,52 @@ const LibraryDashboard = () => {
             </header>
 
             <main className="container mx-auto px-4 py-8 max-w-5xl">
+                {/* My Reservations */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-blue-400" />
+                        My Reservations
+                    </h2>
+                    {myReservations.length === 0 ? (
+                        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 text-center">
+                            <p className="text-gray-400 text-sm">You haven't booked any study rooms yet.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {myReservations.map(booking => (
+                                <div
+                                    key={booking.id}
+                                    className="relative p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-400/20 hover:border-blue-400/40 transition-all group"
+                                >
+                                    <button
+                                        onClick={() => cancelBooking(booking.id)}
+                                        className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/5 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                                        title="Cancel reservation"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                    <h4 className="font-bold text-white text-sm mb-1">
+                                        {booking.room?.name || booking.roomId}
+                                    </h4>
+                                    <p className="text-xs text-gray-400 mb-2">
+                                        {booking.room?.building || 'Library'}
+                                        {booking.room?.floor ? ` · Floor ${booking.room.floor}` : ''}
+                                    </p>
+                                    <div className="flex items-center gap-3 text-xs text-gray-300">
+                                        <span className="flex items-center gap-1">
+                                            <Calendar className="w-3 h-3 text-blue-400" />
+                                            {booking.date}
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3 text-blue-400" />
+                                            {booking.time_slot}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 {/* Search Bar */}
                 <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 mb-8">
                     <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -201,8 +258,8 @@ const LibraryDashboard = () => {
                                 <div
                                     key={room.id}
                                     className={`p-4 rounded-2xl border transition-all ${room.isAvailable
-                                            ? 'bg-white/5 border-white/10 hover:border-blue-400/40 hover:bg-white/10'
-                                            : 'bg-red-500/5 border-red-500/20 opacity-60'
+                                        ? 'bg-white/5 border-white/10 hover:border-blue-400/40 hover:bg-white/10'
+                                        : 'bg-red-500/5 border-red-500/20 opacity-60'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">

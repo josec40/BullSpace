@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
 import { fetchRooms, fetchBookingsByDate, createBooking as apiCreateBooking } from '../services/api';
 import { format, eachDayOfInterval } from 'date-fns';
 
@@ -19,10 +20,23 @@ export const useBookings = () => {
 const API_CONFIGURED = Boolean(import.meta.env.VITE_API_URL);
 
 export const BookingProvider = ({ children }) => {
+    const { currentUser } = useAuth();
     const [rooms, setRooms] = useState(fallbackRooms);
     const [bookings, setBookings] = useState(fallbackReservations);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // ── Student bookings persisted in localStorage ───
+    const [studentBookings, setStudentBookings] = useState(() => {
+        try {
+            const saved = localStorage.getItem('bullspace_student_bookings');
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+
+    useEffect(() => {
+        localStorage.setItem('bullspace_student_bookings', JSON.stringify(studentBookings));
+    }, [studentBookings]);
 
     // ── Load rooms on mount ──────────────────────────
     useEffect(() => {
@@ -117,8 +131,13 @@ export const BookingProvider = ({ children }) => {
                 id: Math.max(...bookings.map(b => b.id || 0), 0) + 1,
                 status: 'Booked',
                 system_source: 'BullSpace',
+                bookedBy: currentUser?.name || 'Unknown',
             };
             setBookings(prev => [...prev, bookingWithId]);
+            // Persist for students
+            if (currentUser?.role === 'student') {
+                setStudentBookings(prev => [...prev, bookingWithId]);
+            }
             return bookingWithId;
         }
 
@@ -134,7 +153,13 @@ export const BookingProvider = ({ children }) => {
         // Refresh bookings for that date so the UI stays in sync
         await loadBookings(newBooking.date);
         return created;
-    }, [bookings, loadBookings]);
+    }, [bookings, loadBookings, currentUser]);
+
+    // ── Cancel a booking ─────────────────────────────
+    const cancelBooking = useCallback((bookingId) => {
+        setBookings(prev => prev.filter(b => b.id !== bookingId));
+        setStudentBookings(prev => prev.filter(b => b.id !== bookingId));
+    }, []);
 
     const value = {
         rooms,
@@ -145,6 +170,8 @@ export const BookingProvider = ({ children }) => {
         loadBookingsForRange,
         addBooking,
         fetchBookings,
+        studentBookings,
+        cancelBooking,
     };
 
     return (

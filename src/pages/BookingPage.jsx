@@ -109,7 +109,7 @@ const BookingPage = () => {
         try {
             await addBooking(newBooking);
             console.log('Booking Submitted:', newBooking);
-            navigate('/');
+            navigate(currentUser?.role === 'student' ? '/library' : '/');
         } catch (err) {
             if (err.status === 409) { // Conflict error from backend
                 setError(err.message);

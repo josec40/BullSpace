@@ -33,11 +33,3 @@ export const buildingCoordinates = {
         abbreviation: "REC"
     }
 };
-
-// Helper to get all building names
-export const getBuildingNames = () => Object.keys(buildingCoordinates);
-
-// Helper to get building by abbreviation
-export const getBuildingByAbbr = (abbr) => {
-    return Object.values(buildingCoordinates).find(b => b.abbreviation === abbr);
-};
