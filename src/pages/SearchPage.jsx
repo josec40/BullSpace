@@ -134,7 +134,7 @@ const SearchPage = () => {
                                     <option value="Engineering Building II">Engineering Building II</option>
                                     <option value="Marshall Student Center">Marshall Student Center</option>
                                     <option value="Interdisciplinary Sciences">Interdisciplinary Sciences</option>
-                                    <option value="Library">Library</option>
+                                    {currentUser?.role !== 'org' && <option value="Library">Library</option>}
                                     <option value="Recreation Center">Recreation Center</option>
                                 </select>
                             </div>

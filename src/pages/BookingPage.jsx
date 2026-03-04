@@ -102,8 +102,8 @@ const BookingPage = () => {
             time_slot: `${format(new Date(`2000-01-01T${formData.startTime}`), 'hh:mm a')} - ${format(new Date(`2000-01-01T${formData.endTime}`), 'hh:mm a')}`,
             startTime: formData.startTime, // Added for DynamoDB
             endTime: formData.endTime,     // Added for DynamoDB
-            organization: formData.orgName,
-            eventName: formData.eventName
+            organization: currentUser?.role === 'student' ? 'Individual Student' : formData.orgName,
+            eventName: currentUser?.role === 'student' ? 'Study Session' : formData.eventName
         };
 
         try {
@@ -136,7 +136,11 @@ const BookingPage = () => {
                 <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
                     <div className="bg-emerald-600 px-8 py-8 text-white">
                         <h1 className="text-3xl font-bold mb-2">Book a Room</h1>
-                        <p className="text-emerald-50">Reserve a space for your organization or event.</p>
+                        <p className="text-emerald-50">
+                            {currentUser?.role === 'student'
+                                ? 'Reserve a study space.'
+                                : 'Reserve a space for your organization or event.'}
+                        </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-8">
@@ -183,55 +187,59 @@ const BookingPage = () => {
                             </div>
                         )}
 
-                        {/* Section 1: Event Details */}
+                        {/* Section 1: Event / Booking Details */}
                         <div className="space-y-6">
                             <h2 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
                                 <Building size={20} className="text-emerald-600" />
-                                Event Details
+                                {currentUser?.role === 'student' ? 'Booking Details' : 'Event Details'}
                             </h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Organization Name</label>
-                                    <input
-                                        type="text"
-                                        name="orgName"
-                                        required
-                                        readOnly={currentUser?.role === 'org'}
-                                        className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${currentUser?.role === 'org' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`}
-                                        placeholder="e.g. Society of Engineers"
-                                        value={formData.orgName}
-                                        onChange={handleChange}
-                                    />
+                            {currentUser?.role !== 'student' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Organization Name</label>
+                                        <input
+                                            type="text"
+                                            name="orgName"
+                                            required
+                                            readOnly={currentUser?.role === 'org'}
+                                            className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${currentUser?.role === 'org' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`}
+                                            placeholder="e.g. Society of Engineers"
+                                            value={formData.orgName}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Event Name</label>
+                                        <input
+                                            type="text"
+                                            name="eventName"
+                                            required
+                                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                                            placeholder="e.g. Weekly Meeting"
+                                            value={formData.eventName}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Event Name</label>
-                                    <input
-                                        type="text"
-                                        name="eventName"
-                                        required
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
-                                        placeholder="e.g. Weekly Meeting"
-                                        value={formData.eventName}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
+                            )}
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Expected Occupancy</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Group Size</label>
                                 <div className="relative">
-                                    <Users className="absolute left-3 top-3.5 text-slate-400" size={18} />
-                                    <input
-                                        type="number"
+                                    <Users className="absolute left-3 top-3.5 text-slate-400 pointer-events-none" size={18} />
+                                    <select
                                         name="occupancy"
                                         required
-                                        min="1"
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
-                                        placeholder="Number of attendees"
+                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none appearance-none bg-white"
                                         value={formData.occupancy}
                                         onChange={handleChange}
-                                    />
+                                    >
+                                        <option value="" disabled>Select group size</option>
+                                        {Array.from({ length: 15 }, (_, i) => i + 1).map(n => (
+                                            <option key={n} value={n}>{n} {n === 1 ? 'person' : 'people'}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         </div>

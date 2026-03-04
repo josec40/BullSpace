@@ -40,7 +40,12 @@ const DashboardPage = () => {
         return roomsData;
     }, [roomsData, currentUser]);
 
-    const bookings = useMemo(() => getEnrichedBookings(rawBookings, filteredRooms), [rawBookings, filteredRooms]);
+    const bookings = useMemo(() => {
+        const enriched = getEnrichedBookings(rawBookings, filteredRooms);
+        // Org users: drop bookings for rooms not in their filtered list (e.g. Library)
+        if (currentUser?.role === 'org') return enriched.filter(b => b.room_name !== 'Unknown Room');
+        return enriched;
+    }, [rawBookings, filteredRooms, currentUser]);
 
     useEffect(() => {
 
