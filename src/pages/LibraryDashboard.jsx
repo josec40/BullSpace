@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Clock, Users, Calendar, LogOut, Search, Check, AlertCircle, X } from 'lucide-react';
+import { BookOpen, Clock, Users, Calendar, LogOut, Search, Check, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import { searchRooms } from '../utils/bookingUtils';
 import { validateBookingDate } from '../utils/validationUtils';
+import EditBookingModal from '../components/EditBookingModal';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const FLOOR_LABELS = {
     3: '3rd Floor — Group Study',
@@ -15,13 +17,18 @@ const FLOOR_LABELS = {
 
 const LibraryDashboard = () => {
     const navigate = useNavigate();
-    const { rooms: allRooms = [], bookings, loadBookings, studentBookings = [], cancelBooking } = useBookings();
+    const { rooms: allRooms = [], bookings, loadBookings, studentBookings = [], editBooking, removeBooking } = useBookings();
     const { currentUser, logout } = useAuth();
 
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [searchResults, setSearchResults] = useState(null);
+
+    // Edit/Delete modal state
+    const [editingBooking, setEditingBooking] = useState(null);
+    const [deletingBooking, setDeletingBooking] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Filter only Library rooms
     const libraryRooms = useMemo(
@@ -96,18 +103,44 @@ const LibraryDashboard = () => {
         navigate('/login');
     };
 
+    const handleConfirmDelete = async (bookingId, roomId, date) => {
+        setIsDeleting(true);
+        try {
+            await removeBooking(bookingId, roomId, date);
+            setDeletingBooking(null);
+        } catch (err) {
+            console.error('Delete failed:', err);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const floors = Object.keys(roomsByFloor).sort((a, b) => Number(a) - Number(b));
 
-    // My reservations — student bookings belonging to this user
+    // My reservations — student bookings belonging to this user (only future/today)
     const myReservations = useMemo(() => {
         if (!currentUser) return [];
+        const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+        // Admin sees all library bookings; student sees only their own
+        if (currentUser.role === 'admin') {
+            return bookings
+                .filter(b => {
+                    const room = allRooms.find(r => r.id === b.roomId);
+                    return room?.building === 'Library' && b.date >= todayStr;
+                })
+                .map(b => {
+                    const room = allRooms.find(r => r.id === b.roomId);
+                    return { ...b, room };
+                });
+        }
         return studentBookings
-            .filter(b => b.bookedBy === currentUser.name)
+            .filter(b => b.bookedBy === currentUser.name && b.date >= todayStr)
             .map(b => {
                 const room = allRooms.find(r => r.id === b.roomId);
                 return { ...b, room };
             });
-    }, [studentBookings, currentUser, allRooms]);
+    }, [studentBookings, bookings, currentUser, allRooms]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-sans text-white">
@@ -152,11 +185,13 @@ const LibraryDashboard = () => {
                 <div className="mb-8">
                     <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-blue-400" />
-                        My Reservations
+                        {currentUser?.role === 'admin' ? 'All Library Bookings' : 'My Reservations'}
                     </h2>
                     {myReservations.length === 0 ? (
                         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 text-center">
-                            <p className="text-gray-400 text-sm">You haven't booked any study rooms yet.</p>
+                            <p className="text-gray-400 text-sm">
+                                {currentUser?.role === 'admin' ? 'No library bookings found.' : "You haven't booked any study rooms yet."}
+                            </p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -165,13 +200,6 @@ const LibraryDashboard = () => {
                                     key={booking.id}
                                     className="relative p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-400/20 hover:border-blue-400/40 transition-all group"
                                 >
-                                    <button
-                                        onClick={() => cancelBooking(booking.id)}
-                                        className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/5 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
-                                        title="Cancel reservation"
-                                    >
-                                        <X className="w-3.5 h-3.5" />
-                                    </button>
                                     <h4 className="font-bold text-white text-sm mb-1">
                                         {booking.room?.name || booking.roomId}
                                     </h4>
@@ -179,6 +207,9 @@ const LibraryDashboard = () => {
                                         {booking.room?.building || 'Library'}
                                         {booking.room?.floor ? ` · Floor ${booking.room.floor}` : ''}
                                     </p>
+                                    {currentUser?.role === 'admin' && booking.organization && (
+                                        <p className="text-xs text-blue-300 mb-1">{booking.organization}</p>
+                                    )}
                                     <div className="flex items-center gap-3 text-xs text-gray-300">
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3 text-blue-400" />
@@ -188,6 +219,24 @@ const LibraryDashboard = () => {
                                             <Clock className="w-3 h-3 text-blue-400" />
                                             {booking.time_slot}
                                         </span>
+                                    </div>
+
+                                    {/* Edit / Delete buttons */}
+                                    <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                                        <button
+                                            onClick={() => setEditingBooking(booking)}
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-gray-400 hover:text-blue-300 text-xs font-medium transition-all border border-white/10 hover:border-blue-400/30"
+                                        >
+                                            <Pencil size={12} />
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => setDeletingBooking(booking)}
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 text-xs font-medium transition-all border border-white/10 hover:border-red-400/30"
+                                        >
+                                            <Trash2 size={12} />
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -329,6 +378,26 @@ const LibraryDashboard = () => {
                     </div>
                 )}
             </main>
+
+            {/* Edit Modal */}
+            {editingBooking && (
+                <EditBookingModal
+                    booking={editingBooking}
+                    rooms={allRooms}
+                    onSave={editBooking}
+                    onClose={() => setEditingBooking(null)}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deletingBooking && (
+                <ConfirmDeleteModal
+                    booking={deletingBooking}
+                    onConfirm={handleConfirmDelete}
+                    onClose={() => setDeletingBooking(null)}
+                    deleting={isDeleting}
+                />
+            )}
         </div>
     );
 };

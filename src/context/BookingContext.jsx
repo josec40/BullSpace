@@ -1,6 +1,12 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { fetchRooms, fetchBookingsByDate, createBooking as apiCreateBooking } from '../services/api';
+import {
+    fetchRooms,
+    fetchBookingsByDate,
+    createBooking as apiCreateBooking,
+    updateBooking as apiUpdateBooking,
+    deleteBookingApi,
+} from '../services/api';
 import { format, eachDayOfInterval } from 'date-fns';
 
 // Fallback data for local dev without the backend
@@ -155,11 +161,52 @@ export const BookingProvider = ({ children }) => {
         return created;
     }, [bookings, loadBookings, currentUser]);
 
-    // ── Cancel a booking ─────────────────────────────
-    const cancelBooking = useCallback((bookingId) => {
-        setBookings(prev => prev.filter(b => b.id !== bookingId));
-        setStudentBookings(prev => prev.filter(b => b.id !== bookingId));
-    }, []);
+    // ── Edit an existing booking ─────────────────────
+    const editBooking = useCallback(async (bookingId, updatedData) => {
+        // Helper: format "HH:mm" → "h:mm AM/PM"
+        const fmt12 = (t) => {
+            if (!t) return '';
+            const [h, m] = t.split(':').map(Number);
+            const ampm = h < 12 ? 'AM' : 'PM';
+            return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${ampm}`;
+        };
+
+        const merged = {
+            ...updatedData,
+            time_slot: updatedData.startTime && updatedData.endTime
+                ? `${fmt12(updatedData.startTime)} - ${fmt12(updatedData.endTime)}`
+                : undefined,
+        };
+
+        if (!API_CONFIGURED) {
+            // Local fallback — update bookings + studentBookings in-place
+            const updater = (prev) => prev.map(b =>
+                b.id === bookingId ? { ...b, ...merged } : b
+            );
+            setBookings(updater);
+            setStudentBookings(updater);
+            return { id: bookingId, ...merged };
+        }
+
+        const updated = await apiUpdateBooking(bookingId, updatedData);
+        await loadBookings(updatedData.date);
+        return updated;
+    }, [loadBookings]);
+
+    // ── Delete a booking ─────────────────────────────
+    const removeBooking = useCallback(async (bookingId, roomId, date) => {
+        if (!API_CONFIGURED) {
+            // Local fallback
+            setBookings(prev => prev.filter(b => b.id !== bookingId));
+            setStudentBookings(prev => prev.filter(b => b.id !== bookingId));
+            return true;
+        }
+
+        await deleteBookingApi(bookingId, roomId, date);
+        await loadBookings(date);
+        return true;
+    }, [loadBookings]);
+
 
     const value = {
         rooms,
@@ -171,7 +218,8 @@ export const BookingProvider = ({ children }) => {
         addBooking,
         fetchBookings,
         studentBookings,
-        cancelBooking,
+        editBooking,
+        removeBooking,
     };
 
     return (
@@ -180,3 +228,4 @@ export const BookingProvider = ({ children }) => {
         </BookingContext.Provider>
     );
 };
+

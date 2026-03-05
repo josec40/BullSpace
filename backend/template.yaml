@@ -139,6 +139,40 @@ Resources:
             Path: /bookings
             Method: POST
 
+  UpdateBookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/bookings.updateBooking
+      CodeUri: .
+      Description: Update an existing booking with conflict detection
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BullSpaceTable
+      Events:
+        UpdateBooking:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BullSpaceApi
+            Path: /bookings/{bookingId}
+            Method: PUT
+
+  DeleteBookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/bookings.deleteBooking
+      CodeUri: .
+      Description: Delete an existing booking
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BullSpaceTable
+      Events:
+        DeleteBooking:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BullSpaceApi
+            Path: /bookings/{bookingId}
+            Method: DELETE
+
 Outputs:
   ApiEndpoint:
     Description: HTTP API endpoint URL

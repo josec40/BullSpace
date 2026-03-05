@@ -1,7 +1,7 @@
 /**
- * Bookings handler — GET /bookings and POST /bookings
+ * Bookings handler — GET, POST, PUT, DELETE /bookings
  */
-import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, PutCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 import ddb, { TABLE_NAME } from '../lib/ddbClient.js';
 
@@ -18,13 +18,11 @@ export const getBookings = async (event) => {
 
     try {
         if (roomId && date) {
-            // Bookings for a specific room + date (main table query)
             const items = await queryRoomDate(roomId, date);
             return { statusCode: 200, headers, body: JSON.stringify(items.map(formatBooking)) };
         }
 
         if (date) {
-            // All bookings for a date across every room (GSI1)
             const { Items = [] } = await ddb.send(
                 new QueryCommand({
                     TableName: TABLE_NAME,
@@ -56,7 +54,6 @@ export const createBooking = async (event) => {
         const body = JSON.parse(event.body || '{}');
         const { roomId, date, startTime, endTime, organization } = body;
 
-        // ── Validate required fields ──────────────────
         if (!roomId || !date || !startTime || !endTime || !organization) {
             return {
                 statusCode: 400,
@@ -67,10 +64,8 @@ export const createBooking = async (event) => {
             };
         }
 
-        // ── Conflict detection ────────────────────────
         const existing = await queryRoomDate(roomId, date);
         const conflict = existing.find((b) => {
-            // Overlap: newStart < existingEnd AND newEnd > existingStart
             return startTime < b.endTime && endTime > b.startTime;
         });
 
@@ -85,7 +80,6 @@ export const createBooking = async (event) => {
             };
         }
 
-        // ── Write new booking ─────────────────────────
         const bookingId = uuidv4();
         const item = {
             PK: `ROOM#${roomId}`,
@@ -117,6 +111,141 @@ export const createBooking = async (event) => {
 };
 
 // ─────────────────────────────────────────────────
+//  PUT /bookings/{bookingId}  — update a booking
+// ─────────────────────────────────────────────────
+export const updateBooking = async (event) => {
+    try {
+        const { bookingId } = event.pathParameters || {};
+        const body = JSON.parse(event.body || '{}');
+        const { roomId, date, startTime, endTime, organization } = body;
+
+        if (!bookingId) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ message: 'Missing bookingId in path' }),
+            };
+        }
+
+        if (!roomId || !date || !startTime || !endTime || !organization) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({
+                    message: 'Missing required fields: roomId, date, startTime, endTime, organization',
+                }),
+            };
+        }
+
+        // ── Find the existing booking by bookingId ────
+        const existing = await findBookingById(bookingId);
+        if (!existing) {
+            return {
+                statusCode: 404,
+                headers,
+                body: JSON.stringify({ message: 'Booking not found' }),
+            };
+        }
+
+        // ── Conflict detection (exclude self) ─────────
+        const sameDayBookings = await queryRoomDate(roomId, date);
+        const conflict = sameDayBookings.find((b) => {
+            if (b.bookingId === bookingId) return false; // skip self
+            return startTime < b.endTime && endTime > b.startTime;
+        });
+
+        if (conflict) {
+            return {
+                statusCode: 409,
+                headers,
+                body: JSON.stringify({
+                    message: 'Time slot conflicts with an existing booking',
+                    conflictWith: formatBooking(conflict),
+                }),
+            };
+        }
+
+        // ── Delete old item (PK/SK may change if room or date changed) ──
+        await ddb.send(
+            new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { PK: existing.PK, SK: existing.SK },
+            })
+        );
+
+        // ── Write updated booking ─────────────────────
+        const updatedItem = {
+            PK: `ROOM#${roomId}`,
+            SK: `BOOKING#${date}#${bookingId}`,
+            bookingId,
+            roomId,
+            date,
+            startTime,
+            endTime,
+            organization,
+            status: 'Booked',
+            systemSource: existing.systemSource || 'BullSpace',
+            GSI1PK: date,
+            GSI1SK: `ROOM#${roomId}`,
+            createdAt: existing.createdAt,
+            updatedAt: new Date().toISOString(),
+        };
+
+        await ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: updatedItem }));
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(formatBooking(updatedItem)),
+        };
+    } catch (err) {
+        console.error('updateBooking error:', err);
+        return { statusCode: 500, headers, body: JSON.stringify({ message: 'Internal server error' }) };
+    }
+};
+
+// ─────────────────────────────────────────────────
+//  DELETE /bookings/{bookingId}?roomId=xxx&date=YYYY-MM-DD
+// ─────────────────────────────────────────────────
+export const deleteBooking = async (event) => {
+    try {
+        const { bookingId } = event.pathParameters || {};
+        const { roomId, date } = event.queryStringParameters || {};
+
+        if (!bookingId) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ message: 'Missing bookingId in path' }),
+            };
+        }
+
+        if (!roomId || !date) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ message: 'Query parameters "roomId" and "date" are required' }),
+            };
+        }
+
+        const pk = `ROOM#${roomId}`;
+        const sk = `BOOKING#${date}#${bookingId}`;
+
+        await ddb.send(
+            new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { PK: pk, SK: sk },
+            })
+        );
+
+        return { statusCode: 204, headers, body: '' };
+    } catch (err) {
+        console.error('deleteBooking error:', err);
+        return { statusCode: 500, headers, body: JSON.stringify({ message: 'Internal server error' }) };
+    }
+};
+
+// ─────────────────────────────────────────────────
 //  Helpers
 // ─────────────────────────────────────────────────
 
@@ -133,6 +262,19 @@ async function queryRoomDate(roomId, date) {
         })
     );
     return Items;
+}
+
+/** Find a single booking by its bookingId (scans GSI1 — only used for updates) */
+async function findBookingById(bookingId) {
+    const { Items = [] } = await ddb.send(
+        new ScanCommand({
+            TableName: TABLE_NAME,
+            FilterExpression: 'bookingId = :bid',
+            ExpressionAttributeValues: { ':bid': bookingId },
+            Limit: 1,
+        })
+    );
+    return Items[0] || null;
 }
 
 /** Format a DynamoDB item into the API response shape */

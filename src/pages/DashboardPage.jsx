@@ -6,18 +6,25 @@ import DateNavigator from '../components/DateNavigator';
 import ViewSwitcher from '../components/ViewSwitcher';
 import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
-import { Calendar, Plus, Search, BookOpen } from 'lucide-react';
+import EditBookingModal from '../components/EditBookingModal';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { Calendar, Plus, Search, BookOpen, Pencil, Trash2 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardPage = () => {
     const navigate = useNavigate();
-    const { bookings: rawBookings, rooms: roomsData = [], loadBookings, loadBookingsForRange } = useBookings();
+    const { bookings: rawBookings, rooms: roomsData = [], loadBookings, loadBookingsForRange, editBooking, removeBooking } = useBookings();
     const { currentUser, logout } = useAuth();
     const [gridData, setGridData] = useState({ rooms: [], timeHeaders: [], dayBookings: [] });
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentView, setCurrentView] = useState('day');
+
+    // Edit/Delete modal state
+    const [editingBooking, setEditingBooking] = useState(null);
+    const [deletingBooking, setDeletingBooking] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Fetch bookings for the visible date range based on the current view
     useEffect(() => {
@@ -42,23 +49,47 @@ const DashboardPage = () => {
 
     const bookings = useMemo(() => {
         const enriched = getEnrichedBookings(rawBookings, filteredRooms);
-        // Org users: drop bookings for rooms not in their filtered list (e.g. Library)
         if (currentUser?.role === 'org') return enriched.filter(b => b.room_name !== 'Unknown Room');
         return enriched;
     }, [rawBookings, filteredRooms, currentUser]);
 
-    useEffect(() => {
+    // Upcoming events: only future bookings, filtered by role
+    const upcomingEvents = useMemo(() => {
+        const todayStr = format(new Date(), 'yyyy-MM-dd');
+        return bookings
+            .filter(b => b.date >= todayStr)
+            .filter(b => currentUser?.role === 'admin' || b.organization === currentUser?.name)
+            .slice(0, 6);
+    }, [bookings, currentUser]);
 
+    useEffect(() => {
         const data = getGridData(bookings, currentDate);
         setGridData(data);
     }, [bookings, currentDate]);
 
-    const handleDateChange = (newDate) => {
-        setCurrentDate(newDate);
+    const handleDateChange = (newDate) => setCurrentDate(newDate);
+    const handleViewChange = (view) => setCurrentView(view);
+
+    // Permission check: can this user edit/delete a given booking?
+    const canModify = (booking) => {
+        if (currentUser?.role === 'admin') return true;
+        if (currentUser?.role === 'org' && booking.organization === currentUser.name) return true;
+        return false;
     };
 
-    const handleViewChange = (view) => {
-        setCurrentView(view);
+    const handleEdit = (booking) => setEditingBooking(booking);
+    const handleDelete = (booking) => setDeletingBooking(booking);
+
+    const handleConfirmDelete = async (bookingId, roomId, date) => {
+        setIsDeleting(true);
+        try {
+            await removeBooking(bookingId, roomId, date);
+            setDeletingBooking(null);
+        } catch (err) {
+            console.error('Delete failed:', err);
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -114,12 +145,15 @@ const DashboardPage = () => {
             </header>
 
             <main className="container mx-auto px-4 py-8">
-                {currentUser?.role === 'org' && (
+                {/* My Upcoming Events — org and admin */}
+                {(currentUser?.role === 'org' || currentUser?.role === 'admin') && (
                     <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-4">My Upcoming Events</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4">
+                            {currentUser?.role === 'admin' ? 'All Upcoming Events' : 'My Upcoming Events'}
+                        </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {bookings.filter(b => b.organization === currentUser.name).slice(0, 3).map((b, i) => (
-                                <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                            {upcomingEvents.map((b, i) => (
+                                <div key={b.id || i} className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 group relative">
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <p className="font-bold text-slate-800 text-lg">{b.room_name}</p>
@@ -129,12 +163,33 @@ const DashboardPage = () => {
                                             {b.status}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-slate-500 mt-2">{b.time_slot}</p>
+                                    <p className="text-sm text-slate-500 mt-1">{b.organization}</p>
+                                    <p className="text-sm text-slate-500 mt-1">{b.time_slot}</p>
+
+                                    {/* Edit / Delete buttons */}
+                                    {canModify(b) && (
+                                        <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                                            <button
+                                                onClick={() => handleEdit(b)}
+                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 text-xs font-medium transition-all border border-slate-200 hover:border-emerald-200"
+                                            >
+                                                <Pencil size={13} />
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(b)}
+                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-medium transition-all border border-slate-200 hover:border-rose-200"
+                                            >
+                                                <Trash2 size={13} />
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
-                            {bookings.filter(b => b.organization === currentUser.name).length === 0 && (
+                            {upcomingEvents.length === 0 && (
                                 <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-slate-100 rounded-xl p-6 text-center text-slate-500">
-                                    No upcoming events found for your organization.
+                                    No upcoming events found{currentUser?.role === 'org' ? ' for your organization' : ''}.
                                 </div>
                             )}
                         </div>
@@ -180,6 +235,8 @@ const DashboardPage = () => {
                         bookings={gridData.dayBookings}
                         rooms={gridData.rooms}
                         timeHeaders={gridData.timeHeaders}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                     />
                 )}
 
@@ -201,6 +258,26 @@ const DashboardPage = () => {
                     />
                 )}
             </main>
+
+            {/* Edit Modal */}
+            {editingBooking && (
+                <EditBookingModal
+                    booking={editingBooking}
+                    rooms={roomsData}
+                    onSave={editBooking}
+                    onClose={() => setEditingBooking(null)}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deletingBooking && (
+                <ConfirmDeleteModal
+                    booking={deletingBooking}
+                    onConfirm={handleConfirmDelete}
+                    onClose={() => setDeletingBooking(null)}
+                    deleting={isDeleting}
+                />
+            )}
         </div>
     );
 };

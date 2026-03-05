@@ -58,3 +58,50 @@ export async function createBooking(bookingData) {
 
     return body;
 }
+
+/**
+ * Update an existing booking. Returns the updated booking on success.
+ */
+export async function updateBooking(bookingId, bookingData) {
+    const res = await fetch(`${API_BASE}/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData),
+    });
+
+    const body = await res.json();
+
+    if (res.status === 409) {
+        const err = new Error(body.message || 'Booking conflict');
+        err.conflict = body.conflictWith;
+        err.status = 409;
+        throw err;
+    }
+
+    if (res.status === 404) {
+        throw new Error(body.message || 'Booking not found');
+    }
+
+    if (!res.ok) {
+        throw new Error(body.message || `Failed to update booking: ${res.status}`);
+    }
+
+    return body;
+}
+
+/**
+ * Delete an existing booking. Returns true on success.
+ */
+export async function deleteBookingApi(bookingId, roomId, date) {
+    const res = await fetch(
+        `${API_BASE}/bookings/${bookingId}?roomId=${encodeURIComponent(roomId)}&date=${encodeURIComponent(date)}`,
+        { method: 'DELETE' }
+    );
+
+    if (!res.ok && res.status !== 204) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Failed to delete booking: ${res.status}`);
+    }
+
+    return true;
+}

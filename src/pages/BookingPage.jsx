@@ -35,6 +35,24 @@ const BookingPage = () => {
 
     const selectedRoom = roomsData.find(r => r.id === formData.room);
 
+    // Live date/time validation
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const nowTime = new Date().toTimeString().slice(0, 5);
+
+    const dateError = formData.date && formData.date < todayStr
+        ? 'Cannot select a past date.'
+        : null;
+
+    const pastTimeError = !dateError && formData.date === todayStr && formData.startTime && formData.startTime < nowTime
+        ? 'Cannot select a time that has already passed today.'
+        : null;
+
+    const timeError = formData.startTime && formData.endTime && formData.startTime >= formData.endTime
+        ? 'End time must be after start time.'
+        : null;
+
+    const validationError = dateError || pastTimeError || timeError;
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -291,11 +309,19 @@ const BookingPage = () => {
                             </div>
                         </div>
 
+                        {/* Live validation warning */}
+                        {validationError && (
+                            <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-lg text-sm flex items-center gap-2">
+                                <AlertCircle size={16} className="shrink-0" />
+                                <span>{validationError}</span>
+                            </div>
+                        )}
+
                         <div className="pt-6">
                             <button
                                 type="submit"
-                                disabled={isSubmitting}
-                                className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
+                                disabled={isSubmitting || !!validationError}
+                                className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 ${(isSubmitting || validationError) ? 'opacity-75 cursor-not-allowed' : ''}`}
                             >
                                 {isSubmitting ? (
                                     <span className="animate-pulse">Processing...</span>

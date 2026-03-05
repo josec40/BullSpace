@@ -2,8 +2,9 @@ import React from 'react';
 import { parseTimeSlot } from '../utils/bookingUtils';
 import { parse, isWithinInterval, addMinutes } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
+import { Pencil, Trash2 } from 'lucide-react';
 
-const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
+const DashboardGrid = ({ bookings, rooms, timeHeaders, onEdit, onDelete }) => {
     const { currentUser } = useAuth();
 
     const isSlotBooked = (room, timeStr) => {
@@ -29,6 +30,13 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
         }
         return 'Reserved';
     };
+
+    const canModify = (booking) => {
+        if (currentUser?.role === 'admin') return true;
+        if (currentUser?.role === 'org' && booking.organization === currentUser?.name) return true;
+        return false;
+    };
+
     return (
         <div className="overflow-x-auto shadow-xl shadow-slate-200/60 rounded-2xl border border-slate-200 bg-white">
             <div className="min-w-max">
@@ -70,7 +78,7 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
                                                     </span>
 
                                                     {/* Tooltip */}
-                                                    <div className="absolute z-50 invisible group-hover/cell:visible bg-slate-800 text-white text-xs rounded-xl p-4 -mt-32 left-1/2 transform -translate-x-1/2 w-56 shadow-2xl pointer-events-none transition-all opacity-0 group-hover/cell:opacity-100 translate-y-2 group-hover/cell:translate-y-0">
+                                                    <div className="absolute z-50 invisible group-hover/cell:visible bg-slate-800 text-white text-xs rounded-xl p-4 -mt-32 left-1/2 transform -translate-x-1/2 w-56 shadow-2xl pointer-events-none group-hover/cell:pointer-events-auto transition-all opacity-0 group-hover/cell:opacity-100 translate-y-2 group-hover/cell:translate-y-0">
                                                         {booking.isConflict ? (
                                                             <div>
                                                                 <p className="font-bold text-rose-300 mb-2 uppercase tracking-wide">Double Booked</p>
@@ -85,6 +93,23 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
                                                                     <span className="text-slate-400 text-[10px] uppercase tracking-wide">Source</span>
                                                                     <span className="bg-slate-700 px-2 py-0.5 rounded text-[10px] font-mono">{booking.system_source}</span>
                                                                 </div>
+                                                                {/* Edit / Delete actions */}
+                                                                {canModify(booking) && onEdit && onDelete && (
+                                                                    <div className="flex gap-2 mt-3 pt-2 border-t border-slate-700">
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); onEdit(booking); }}
+                                                                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-200 text-[10px] font-medium transition"
+                                                                        >
+                                                                            <Pencil size={10} /> Edit
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); onDelete(booking); }}
+                                                                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-rose-500/30 hover:bg-rose-500/50 text-rose-200 text-[10px] font-medium transition"
+                                                                        >
+                                                                            <Trash2 size={10} /> Delete
+                                                                        </button>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-3 h-3 bg-slate-800"></div>
@@ -104,3 +129,4 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders }) => {
 };
 
 export default DashboardGrid;
+
