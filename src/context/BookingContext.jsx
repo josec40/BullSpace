@@ -9,6 +9,7 @@ import {
 } from '../services/api';
 import { format, eachDayOfInterval, parse } from 'date-fns';
 import { searchRooms } from '../utils/bookingUtils';
+import { useActivityLog } from './ActivityLogContext';
 
 // Fallback data for local dev without the backend
 import fallbackRooms from '../data/rooms.json';
@@ -28,6 +29,7 @@ const API_CONFIGURED = Boolean(import.meta.env.VITE_API_URL);
 
 export const BookingProvider = ({ children }) => {
     const { currentUser } = useAuth();
+    const { addLogEntry } = useActivityLog();
     const [rooms, setRooms] = useState(fallbackRooms);
     const [bookings, setBookings] = useState(fallbackReservations);
     const [loading, setLoading] = useState(false);
@@ -160,6 +162,11 @@ export const BookingProvider = ({ children }) => {
             if (currentUser?.role === 'student') {
                 setStudentBookings(prev => [...prev, bookingWithId]);
             }
+            // Log event-space bookings
+            const room = rooms.find(r => r.id === bookingWithId.roomId);
+            if (!room || room.building !== 'Library') {
+                addLogEntry('created', { ...bookingWithId, room_name: room?.name, building: room?.building }, currentUser?.name, currentUser?.role);
+            }
             return bookingWithId;
         }
 
@@ -172,10 +179,16 @@ export const BookingProvider = ({ children }) => {
             organization: newBooking.organization,
         });
 
+        // Log for API mode too
+        const room = rooms.find(r => r.id === newBooking.roomId);
+        if (!room || room.building !== 'Library') {
+            addLogEntry('created', { ...created, room_name: room?.name, building: room?.building }, currentUser?.name, currentUser?.role);
+        }
+
         // Refresh bookings for that date so the UI stays in sync
         await loadBookings(newBooking.date);
         return created;
-    }, [bookings, loadBookings, currentUser]);
+    }, [bookings, loadBookings, currentUser, rooms, addLogEntry]);
 
     // ── Edit an existing booking ─────────────────────
     const editBooking = useCallback(async (bookingId, updatedData) => {
@@ -196,32 +209,54 @@ export const BookingProvider = ({ children }) => {
 
         if (!API_CONFIGURED) {
             // Local fallback — update bookings + studentBookings in-place
+            const oldBooking = bookings.find(b => b.id === bookingId);
             const updater = (prev) => prev.map(b =>
                 b.id === bookingId ? { ...b, ...merged } : b
             );
             setBookings(updater);
             setStudentBookings(updater);
+            // Log edit for event-space bookings
+            const room = rooms.find(r => r.id === (oldBooking?.roomId || updatedData.roomId));
+            if (!room || room.building !== 'Library') {
+                const changes = {};
+                if (oldBooking) {
+                    if (updatedData.date && updatedData.date !== oldBooking.date) changes.date = { old: oldBooking.date, new: updatedData.date };
+                    if (updatedData.startTime && updatedData.startTime !== oldBooking.startTime) changes.time = { old: oldBooking.time_slot, new: merged.time_slot };
+                    if (updatedData.organization && updatedData.organization !== oldBooking.organization) changes.organization = { old: oldBooking.organization, new: updatedData.organization };
+                    if (updatedData.groupSize != null && String(updatedData.groupSize) !== String(oldBooking.groupSize || '')) changes['Expected Attendance'] = { old: oldBooking.groupSize || '—', new: updatedData.groupSize };
+                }
+                addLogEntry('edited', { ...oldBooking, ...merged, room_name: room?.name, building: room?.building }, currentUser?.name, currentUser?.role, Object.keys(changes).length > 0 ? changes : null);
+            }
             return { id: bookingId, ...merged };
         }
 
         const updated = await apiUpdateBooking(bookingId, updatedData);
         await loadBookings(updatedData.date);
         return updated;
-    }, [loadBookings]);
+    }, [loadBookings, bookings, rooms, currentUser, addLogEntry]);
 
     // ── Delete a booking ─────────────────────────────
     const removeBooking = useCallback(async (bookingId, roomId, date) => {
         if (!API_CONFIGURED) {
+            // Capture booking before deleting for the log
+            const deletedBooking = bookings.find(b => b.id === bookingId);
             // Local fallback
             setBookings(prev => prev.filter(b => b.id !== bookingId));
             setStudentBookings(prev => prev.filter(b => b.id !== bookingId));
+            // Log deletion for event-space bookings
+            if (deletedBooking) {
+                const room = rooms.find(r => r.id === deletedBooking.roomId);
+                if (!room || room.building !== 'Library') {
+                    addLogEntry('deleted', { ...deletedBooking, room_name: room?.name, building: room?.building }, currentUser?.name, currentUser?.role);
+                }
+            }
             return true;
         }
 
         await deleteBookingApi(bookingId, roomId, date);
         await loadBookings(date);
         return true;
-    }, [loadBookings]);
+    }, [loadBookings, bookings, rooms, currentUser, addLogEntry]);
 
 
     const value = {

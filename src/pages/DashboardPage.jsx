@@ -8,10 +8,22 @@ import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
 import EditBookingModal from '../components/EditBookingModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
-import { Calendar, Plus, Search, BookOpen, Pencil, Trash2, Eye, X, MapPin, Clock, Users as UsersIcon, Tag } from 'lucide-react';
+import { Calendar, Plus, Search, BookOpen, Pencil, Trash2, Eye, X, MapPin, Clock, Users as UsersIcon, Tag, ScrollText } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
+import { useActivityLog } from '../context/ActivityLogContext';
+
+// Unread badge for Activity Log button
+const UnreadBadge = () => {
+    const { unreadCount } = useActivityLog();
+    if (unreadCount === 0) return null;
+    return (
+        <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
+            {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+    );
+};
 
 const DashboardPage = () => {
     const navigate = useNavigate();
@@ -123,6 +135,16 @@ const DashboardPage = () => {
                             <div className="text-white mr-4 text-sm hidden md:block">
                                 Hello, <span className="font-bold">{currentUser.name}</span>
                             </div>
+                        )}
+                        {currentUser?.role === 'admin' && (
+                            <Link
+                                to="/activity-log"
+                                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-amber-400 relative"
+                            >
+                                <ScrollText size={16} />
+                                Activity Log
+                                <UnreadBadge />
+                            </Link>
                         )}
                         {currentUser?.role === 'admin' && (
                             <Link
