@@ -8,7 +8,7 @@ import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
 import EditBookingModal from '../components/EditBookingModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
-import { Calendar, Plus, Search, BookOpen, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Search, BookOpen, Pencil, Trash2, Eye, X, MapPin, Clock, Users as UsersIcon, Tag } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +25,9 @@ const DashboardPage = () => {
     const [editingBooking, setEditingBooking] = useState(null);
     const [deletingBooking, setDeletingBooking] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Event detail modal state
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     // Fetch bookings for the visible date range based on the current view
     useEffect(() => {
@@ -43,15 +46,25 @@ const DashboardPage = () => {
 
     // Filter rooms by role: orgs see only event spaces, admin sees all
     const filteredRooms = useMemo(() => {
-        if (currentUser?.role === 'org') return roomsData.filter(r => r.building !== 'Library');
+        // Both org and admin exclude Library rooms — those are on the Library dashboard
+        if (currentUser?.role === 'org' || currentUser?.role === 'admin') {
+            return roomsData.filter(r => r.building !== 'Library');
+        }
         return roomsData;
     }, [roomsData, currentUser]);
 
     const bookings = useMemo(() => {
-        const enriched = getEnrichedBookings(rawBookings, filteredRooms);
+        // For event spaces dashboard, exclude library room bookings before enrichment
+        const relevantBookings = (currentUser?.role === 'org' || currentUser?.role === 'admin')
+            ? rawBookings.filter(b => {
+                const room = roomsData.find(r => r.id === b.roomId);
+                return !(room && room.building === 'Library');
+            })
+            : rawBookings;
+        const enriched = getEnrichedBookings(relevantBookings, filteredRooms);
         if (currentUser?.role === 'org') return enriched.filter(b => b.room_name !== 'Unknown Room');
         return enriched;
-    }, [rawBookings, filteredRooms, currentUser]);
+    }, [rawBookings, filteredRooms, currentUser, roomsData]);
 
     // Upcoming events: only future bookings, filtered by role
     const upcomingEvents = useMemo(() => {
@@ -153,7 +166,11 @@ const DashboardPage = () => {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {upcomingEvents.map((b, i) => (
-                                <div key={b.id || i} className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 group relative">
+                                <div
+                                    key={b.id || i}
+                                    className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 group relative cursor-pointer hover:shadow-md hover:border-emerald-200 transition-all"
+                                    onClick={() => setSelectedEvent(b)}
+                                >
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <p className="font-bold text-slate-800 text-lg">{b.room_name}</p>
@@ -166,25 +183,34 @@ const DashboardPage = () => {
                                     <p className="text-sm text-slate-500 mt-1">{b.organization}</p>
                                     <p className="text-sm text-slate-500 mt-1">{b.time_slot}</p>
 
-                                    {/* Edit / Delete buttons */}
-                                    {canModify(b) && (
-                                        <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                                            <button
-                                                onClick={() => handleEdit(b)}
-                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 text-xs font-medium transition-all border border-slate-200 hover:border-emerald-200"
-                                            >
-                                                <Pencil size={13} />
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(b)}
-                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-medium transition-all border border-slate-200 hover:border-rose-200"
-                                            >
-                                                <Trash2 size={13} />
-                                                Delete
-                                            </button>
-                                        </div>
-                                    )}
+                                    {/* Action buttons */}
+                                    <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setSelectedEvent(b); }}
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition-all border border-emerald-200"
+                                        >
+                                            <Eye size={13} />
+                                            View Details
+                                        </button>
+                                        {canModify(b) && (
+                                            <>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleEdit(b); }}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 text-xs font-medium transition-all border border-slate-200 hover:border-emerald-200"
+                                                >
+                                                    <Pencil size={13} />
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDelete(b); }}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-medium transition-all border border-slate-200 hover:border-rose-200"
+                                                >
+                                                    <Trash2 size={13} />
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                             {upcomingEvents.length === 0 && (
@@ -237,6 +263,7 @@ const DashboardPage = () => {
                         timeHeaders={gridData.timeHeaders}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onEventClick={(booking) => setSelectedEvent(booking)}
                     />
                 )}
 
@@ -277,6 +304,109 @@ const DashboardPage = () => {
                     onClose={() => setDeletingBooking(null)}
                     deleting={isDeleting}
                 />
+            )}
+
+            {/* Event Detail Modal */}
+            {selectedEvent && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedEvent(null)}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="bg-emerald-600 px-6 py-5 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-white">Event Details</h3>
+                            <button onClick={() => setSelectedEvent(null)} className="text-white/80 hover:text-white transition">
+                                <X size={22} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-5">
+                            {/* Event Name */}
+                            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                                <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Event Name</p>
+                                <p className="text-lg font-bold text-slate-800">{selectedEvent.eventName || 'Untitled Event'}</p>
+                            </div>
+
+                            {/* Org & Room */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Tag size={16} className="text-indigo-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-medium">Organization</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.organization || '—'}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <MapPin size={16} className="text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-medium">Room</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.room_name || 'Unknown Room'}</p>
+                                        <p className="text-xs text-slate-400">{selectedEvent.building || ''}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Date, Time, Capacity */}
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Calendar size={16} className="text-amber-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-medium">Date</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.date}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Clock size={16} className="text-purple-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-medium">Time</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.time_slot}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <UsersIcon size={16} className="text-teal-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-medium">Expected Attendance</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.groupSize || selectedEvent.capacity || '—'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Status & Source */}
+                            <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                                <span className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold">{selectedEvent.status}</span>
+                                {selectedEvent.system_source && (
+                                    <span className="bg-slate-100 text-slate-600 text-xs px-3 py-1 rounded-full font-mono">{selectedEvent.system_source}</span>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            {canModify(selectedEvent) && (
+                                <div className="flex gap-3 pt-3 border-t border-slate-100">
+                                    <button
+                                        onClick={() => { handleEdit(selectedEvent); setSelectedEvent(null); }}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-all shadow-md"
+                                    >
+                                        <Pencil size={14} /> Edit Booking
+                                    </button>
+                                    <button
+                                        onClick={() => { handleDelete(selectedEvent); setSelectedEvent(null); }}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-semibold transition-all border border-rose-200"
+                                    >
+                                        <Trash2 size={14} /> Delete
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

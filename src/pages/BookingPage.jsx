@@ -120,8 +120,9 @@ const BookingPage = () => {
             time_slot: `${format(new Date(`2000-01-01T${formData.startTime}`), 'hh:mm a')} - ${format(new Date(`2000-01-01T${formData.endTime}`), 'hh:mm a')}`,
             startTime: formData.startTime, // Added for DynamoDB
             endTime: formData.endTime,     // Added for DynamoDB
-            organization: currentUser?.role === 'student' ? 'Individual Student' : formData.orgName,
-            eventName: currentUser?.role === 'student' ? 'Study Session' : formData.eventName
+            organization: currentUser?.role === 'student' ? (currentUser.name || 'Individual Student') : formData.orgName,
+            eventName: currentUser?.role === 'student' ? 'Study Session' : formData.eventName,
+            groupSize: formData.occupancy || null,
         };
 
         try {
@@ -243,21 +244,19 @@ const BookingPage = () => {
                             )}
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Group Size</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Expected Attendance</label>
                                 <div className="relative">
                                     <Users className="absolute left-3 top-3.5 text-slate-400 pointer-events-none" size={18} />
-                                    <select
+                                    <input
+                                        type="number"
                                         name="occupancy"
                                         required
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none appearance-none bg-white"
+                                        min="1"
+                                        placeholder="e.g. 25"
+                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none bg-white"
                                         value={formData.occupancy}
                                         onChange={handleChange}
-                                    >
-                                        <option value="" disabled>Select group size</option>
-                                        {Array.from({ length: 15 }, (_, i) => i + 1).map(n => (
-                                            <option key={n} value={n}>{n} {n === 1 ? 'person' : 'people'}</option>
-                                        ))}
-                                    </select>
+                                    />
                                 </div>
                             </div>
                         </div>

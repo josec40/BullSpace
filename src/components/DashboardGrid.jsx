@@ -4,7 +4,7 @@ import { parse, isWithinInterval, addMinutes } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { Pencil, Trash2 } from 'lucide-react';
 
-const DashboardGrid = ({ bookings, rooms, timeHeaders, onEdit, onDelete }) => {
+const DashboardGrid = ({ bookings, rooms, timeHeaders, onEdit, onDelete, onEventClick }) => {
     const { currentUser } = useAuth();
 
     const isSlotBooked = (room, timeStr) => {
@@ -64,6 +64,7 @@ const DashboardGrid = ({ bookings, rooms, timeHeaders, onEdit, onDelete }) => {
                                 return (
                                     <div key={colIndex} className="w-32 p-1 h-20 flex-shrink-0 border-r border-slate-50 last:border-r-0">
                                         <div
+                                            onClick={() => booking && !booking.isConflict && onEventClick?.(booking)}
                                             className={`w-full h-full rounded-lg transition-all duration-300 transform ${booking
                                                 ? booking.isConflict
                                                     ? 'bg-rose-500 hover:bg-rose-600 shadow-md shadow-rose-200 cursor-pointer relative group/cell flex flex-col justify-center items-center text-center p-1'

@@ -17,7 +17,7 @@ const FLOOR_LABELS = {
 
 const LibraryDashboard = () => {
     const navigate = useNavigate();
-    const { rooms: allRooms = [], bookings, loadBookings, studentBookings = [], editBooking, removeBooking } = useBookings();
+    const { rooms: allRooms = [], bookings, loadBookings, studentBookings = [], editBooking, removeBooking, addBooking, fetchBookings } = useBookings();
     const { currentUser, logout } = useAuth();
 
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -29,6 +29,13 @@ const LibraryDashboard = () => {
     const [editingBooking, setEditingBooking] = useState(null);
     const [deletingBooking, setDeletingBooking] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Inline booking state
+    const [bookingRoom, setBookingRoom] = useState(null);
+    const [bookingStudentName, setBookingStudentName] = useState('');
+    const [bookingGroupSize, setBookingGroupSize] = useState('');
+    const [isBooking, setIsBooking] = useState(false);
+    const [bookError, setBookError] = useState(null);
 
     // Filter only Library rooms
     const libraryRooms = useMemo(
@@ -68,34 +75,81 @@ const LibraryDashboard = () => {
         return opts;
     }, []);
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         if (!selectedDate || !startTime || !endTime) return;
 
         const parsedDate = parse(selectedDate, 'yyyy-MM-dd', new Date());
         const dateError = validateBookingDate(parsedDate);
         if (dateError) return;
 
+        // Fetch latest bookings for conflict accuracy
+        const latestBookings = await fetchBookings(selectedDate);
+
         const results = searchRooms({
             date: parsedDate,
             startTime,
             endTime,
             building: 'Library',
-        }, allRooms, bookings);
+        }, allRooms, latestBookings || bookings);
 
         setSearchResults(results);
     };
 
     const handleBook = (room) => {
-        navigate('/book', {
-            state: {
-                prefilled: {
-                    room: room.id,
-                    date: selectedDate,
-                    startTime,
-                    endTime,
-                }
+        setBookingRoom(room);
+        setBookingStudentName('');
+        setBookingGroupSize('');
+        setBookError(null);
+    };
+
+    const handleConfirmBook = async () => {
+        if (!bookingRoom || !selectedDate || !startTime || !endTime) return;
+        if (currentUser?.role === 'admin' && !bookingStudentName.trim()) {
+            setBookError('Please enter the student name.');
+            return;
+        }
+        if (!bookingGroupSize) {
+            setBookError('Please select a group size.');
+            return;
+        }
+
+        setIsBooking(true);
+        setBookError(null);
+
+        const startDate = new Date(`2000-01-01T${startTime}`);
+        const endDate = new Date(`2000-01-01T${endTime}`);
+        const fmtTime = (d) => {
+            const h = d.getHours();
+            const m = d.getMinutes().toString().padStart(2, '0');
+            const ampm = h < 12 ? 'AM' : 'PM';
+            return `${h % 12 || 12}:${m} ${ampm}`;
+        };
+
+        const newBooking = {
+            roomId: bookingRoom.id,
+            date: selectedDate,
+            time_slot: `${fmtTime(startDate)} - ${fmtTime(endDate)}`,
+            startTime,
+            endTime,
+            organization: currentUser?.role === 'admin'
+                ? bookingStudentName.trim()
+                : (currentUser?.name || 'Individual Student'),
+            eventName: 'Study Session',
+        };
+
+        try {
+            await addBooking(newBooking);
+            setBookingRoom(null);
+            setSearchResults(null);
+        } catch (err) {
+            if (err.status === 409) {
+                setBookError(err.message);
+            } else {
+                setBookError('Something went wrong. Please try again.');
             }
-        });
+        } finally {
+            setIsBooking(false);
+        }
     };
 
     const handleLogout = () => {
@@ -124,7 +178,10 @@ const LibraryDashboard = () => {
 
         // Admin sees all library bookings; student sees only their own
         if (currentUser.role === 'admin') {
-            return bookings
+            // Merge API bookings + locally-added student bookings, deduplicate
+            const allBookings = [...bookings, ...studentBookings];
+            const unique = [...new Map(allBookings.map(b => [b.id, b])).values()];
+            return unique
                 .filter(b => {
                     const room = allRooms.find(r => r.id === b.roomId);
                     return room?.building === 'Library' && b.date >= todayStr;
@@ -134,12 +191,21 @@ const LibraryDashboard = () => {
                     return { ...b, room };
                 });
         }
-        return studentBookings
-            .filter(b => b.bookedBy === currentUser.name && b.date >= todayStr)
-            .map(b => {
-                const room = allRooms.find(r => r.id === b.roomId);
-                return { ...b, room };
-            });
+        // Student: own bookings (bookedBy) + admin-assigned bookings (organization matches name)
+        const ownBookings = studentBookings.filter(b => b.bookedBy === currentUser.name && b.date >= todayStr);
+        const assignedBookings = bookings.filter(b => {
+            const room = allRooms.find(r => r.id === b.roomId);
+            return room?.building === 'Library'
+                && b.organization === currentUser.name
+                && b.bookedBy !== currentUser.name
+                && b.date >= todayStr;
+        });
+        const merged = [...ownBookings, ...assignedBookings];
+        const unique = [...new Map(merged.map(b => [b.id, b])).values()];
+        return unique.map(b => {
+            const room = allRooms.find(r => r.id === b.roomId);
+            return { ...b, room };
+        });
     }, [studentBookings, bookings, currentUser, allRooms]);
 
     return (
@@ -326,12 +392,68 @@ const LibraryDashboard = () => {
                                         <span className="capitalize">{room.type}</span>
                                     </div>
                                     {room.isAvailable ? (
-                                        <button
-                                            onClick={() => handleBook(room)}
-                                            className="w-full bg-blue-500/20 text-blue-400 font-medium py-2 rounded-xl text-xs hover:bg-blue-500/30 transition flex items-center justify-center gap-1"
-                                        >
-                                            <Check className="w-3 h-3" /> Reserve
-                                        </button>
+                                        bookingRoom?.id === room.id ? (
+                                            /* Inline booking form */
+                                            <div className="bg-white/10 rounded-xl p-3 border border-blue-400/30 space-y-3">
+                                                <p className="text-xs font-bold text-blue-300 uppercase tracking-wider">Confirm Reservation</p>
+                                                <div className="text-xs text-gray-300 space-y-1">
+                                                    <p><span className="text-gray-500">Date:</span> {selectedDate}</p>
+                                                    <p><span className="text-gray-500">Time:</span> {timeOptions.find(t => t.value === startTime)?.label} – {timeOptions.find(t => t.value === endTime)?.label}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1">Group Size</label>
+                                                    <select
+                                                        value={bookingGroupSize}
+                                                        onChange={(e) => setBookingGroupSize(e.target.value)}
+                                                        className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-xs border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                                                    >
+                                                        <option value="" className="bg-slate-800">Select</option>
+                                                        {Array.from({ length: room.capacity }, (_, i) => i + 1).map(n => (
+                                                            <option key={n} value={n} className="bg-slate-800">{n} {n === 1 ? 'person' : 'people'}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                {currentUser?.role === 'admin' && (
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Student Name</label>
+                                                        <input
+                                                            type="text"
+                                                            value={bookingStudentName}
+                                                            onChange={(e) => setBookingStudentName(e.target.value)}
+                                                            placeholder="Enter student name"
+                                                            className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-xs border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400/50 placeholder-gray-500"
+                                                        />
+                                                    </div>
+                                                )}
+                                                {bookError && (
+                                                    <div className="flex items-center gap-1 text-xs text-red-400">
+                                                        <AlertCircle className="w-3 h-3" /> {bookError}
+                                                    </div>
+                                                )}
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={handleConfirmBook}
+                                                        disabled={isBooking}
+                                                        className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-xs transition flex items-center justify-center gap-1"
+                                                    >
+                                                        {isBooking ? 'Booking...' : <><Check className="w-3 h-3" /> Confirm</>}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setBookingRoom(null)}
+                                                        className="flex-1 bg-white/10 hover:bg-white/20 text-gray-300 font-medium py-2 rounded-lg text-xs transition"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleBook(room)}
+                                                className="w-full bg-blue-500/20 text-blue-400 font-medium py-2 rounded-xl text-xs hover:bg-blue-500/30 transition flex items-center justify-center gap-1"
+                                            >
+                                                <Check className="w-3 h-3" /> Reserve
+                                            </button>
+                                        )
                                     ) : (
                                         <div className="flex items-center gap-1 text-xs text-red-400">
                                             <AlertCircle className="w-3 h-3" /> {room.conflict?.time_slot || 'Unavailable'}

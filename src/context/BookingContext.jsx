@@ -7,7 +7,8 @@ import {
     updateBooking as apiUpdateBooking,
     deleteBookingApi,
 } from '../services/api';
-import { format, eachDayOfInterval } from 'date-fns';
+import { format, eachDayOfInterval, parse } from 'date-fns';
+import { searchRooms } from '../utils/bookingUtils';
 
 // Fallback data for local dev without the backend
 import fallbackRooms from '../data/rooms.json';
@@ -111,7 +112,7 @@ export const BookingProvider = ({ children }) => {
 
     // ── Fetch all bookings for a date (used by BookingPage for conflict check) ──
     const fetchBookings = useCallback(async (date) => {
-        if (!API_CONFIGURED) return fallbackReservations;
+        if (!API_CONFIGURED) return bookings;
         try {
             const dateStr = typeof date === 'string'
                 ? date
@@ -125,13 +126,28 @@ export const BookingProvider = ({ children }) => {
             console.error('fetchBookings error:', err);
             return [];
         }
-    }, []);
+    }, [bookings]);
 
 
     // ── Create a new booking ─────────────────────────
     const addBooking = useCallback(async (newBooking) => {
         if (!API_CONFIGURED) {
-            // Local fallback — same as the original behaviour
+            // Local fallback — with conflict detection
+            if (newBooking.startTime && newBooking.endTime && newBooking.date) {
+                const parsedDate = typeof newBooking.date === 'string'
+                    ? parse(newBooking.date, 'yyyy-MM-dd', new Date())
+                    : newBooking.date;
+                const conflictResults = searchRooms(
+                    { date: parsedDate, startTime: newBooking.startTime, endTime: newBooking.endTime },
+                    rooms, bookings
+                );
+                const target = conflictResults.find(r => r.id === newBooking.roomId);
+                if (target && !target.isAvailable) {
+                    const err = new Error('Room is already booked for this time slot.');
+                    err.status = 409;
+                    throw err;
+                }
+            }
             const bookingWithId = {
                 ...newBooking,
                 id: Math.max(...bookings.map(b => b.id || 0), 0) + 1,

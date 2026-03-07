@@ -9,14 +9,14 @@ import { useAuth } from '../context/AuthContext';
 
 const SearchPage = () => {
     const navigate = useNavigate();
-    const { bookings, rooms: allRooms = [] } = useBookings();
+    const { bookings, rooms: allRooms = [], fetchBookings } = useBookings();
     const { currentUser } = useAuth();
 
     // Filter rooms by role
     const roomsData = allRooms.filter(r => {
         if (currentUser?.role === 'student') return r.building === 'Library';
-        if (currentUser?.role === 'org') return r.building !== 'Library';
-        return true; // admin sees all
+        if (currentUser?.role === 'org' || currentUser?.role === 'admin') return r.building !== 'Library';
+        return true;
     });
 
     const [filters, setFilters] = useState({
@@ -54,7 +54,7 @@ const SearchPage = () => {
         if (name === 'date') setError(null);
     };
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
 
 
@@ -71,10 +71,13 @@ const SearchPage = () => {
             return;
         }
 
+        // Fetch latest bookings for conflict accuracy
+        const latestBookings = await fetchBookings(filters.date);
+
         const foundRooms = searchRooms({
             ...filters,
             date: parsedSearchDate
-        }, roomsData, bookings);
+        }, roomsData, latestBookings || bookings);
 
         setResults(foundRooms);
         setHasSearched(true);
