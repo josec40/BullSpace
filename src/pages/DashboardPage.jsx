@@ -8,7 +8,7 @@ import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
 import EditBookingModal from '../components/EditBookingModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
-import { Calendar, Plus, Search, BookOpen, Pencil, Trash2, Eye, X, MapPin, Clock, Users as UsersIcon, Tag, ScrollText } from 'lucide-react';
+import { Calendar, Plus, Search, BookOpen, Pencil, Trash2, Eye, X, MapPin, Clock, Users as UsersIcon, Tag, ScrollText, BarChart2 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
@@ -137,14 +137,23 @@ const DashboardPage = () => {
                             </div>
                         )}
                         {currentUser?.role === 'admin' && (
-                            <Link
-                                to="/activity-log"
-                                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-amber-400 relative"
-                            >
-                                <ScrollText size={16} />
-                                Activity Log
-                                <UnreadBadge />
-                            </Link>
+                            <>
+                                <Link
+                                    to="/org-stats"
+                                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-indigo-400"
+                                >
+                                    <BarChart2 size={16} />
+                                    Organization Stats
+                                </Link>
+                                <Link
+                                    to="/activity-log"
+                                    className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-amber-400 relative"
+                                >
+                                    <ScrollText size={16} />
+                                    Activity Log
+                                    <UnreadBadge />
+                                </Link>
+                            </>
                         )}
                         {currentUser?.role === 'admin' && (
                             <Link

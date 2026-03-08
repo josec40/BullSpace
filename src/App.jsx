@@ -10,6 +10,7 @@ import MapView from './pages/MapView';
 import LoginPage from './pages/LoginPage';
 import LibraryDashboard from './pages/LibraryDashboard';
 import ActivityLogPage from './pages/ActivityLogPage';
+import OrgStatsPage from './pages/OrgStatsPage';
 
 // Protected Route Wrapper with optional role restriction
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -45,6 +46,7 @@ function App() {
 
               {/* Activity log — admin only */}
               <Route path="/activity-log" element={<ProtectedRoute allowedRoles={['admin']}><ActivityLogPage /></ProtectedRoute>} />
+              <Route path="/org-stats" element={<ProtectedRoute allowedRoles={['admin']}><OrgStatsPage /></ProtectedRoute>} />
             </Routes>
           </Router>
         </BookingProvider>
