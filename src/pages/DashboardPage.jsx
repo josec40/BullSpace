@@ -8,6 +8,10 @@ import WeekView from '../components/WeekView';
 import MonthView from '../components/MonthView';
 import EditBookingModal from '../components/EditBookingModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import Navbar from '@/components/Navbar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Calendar, Plus, Search, BookOpen, Pencil, Trash2, Eye, X, MapPin, Clock, Users as UsersIcon, Tag, ScrollText, BarChart2 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useBookings } from '../context/BookingContext';
@@ -19,7 +23,7 @@ const UnreadBadge = () => {
     const { unreadCount } = useActivityLog();
     if (unreadCount === 0) return null;
     return (
-        <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
+        <span className="absolute -top-1.5 -right-1.5 bg-destructive text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
             {unreadCount > 9 ? '9+' : unreadCount}
         </span>
     );
@@ -117,149 +121,133 @@ const DashboardPage = () => {
         }
     };
 
+    // Navbar actions — admin sees nav links
+    const navActions = currentUser?.role === 'admin' ? (
+        <>
+            <Link to="/org-stats">
+                <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+                    <BarChart2 className="w-4 h-4 mr-1" /> Stats
+                </Button>
+            </Link>
+            <Link to="/activity-log" className="relative">
+                <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+                    <ScrollText className="w-4 h-4 mr-1" /> Log
+                </Button>
+                <UnreadBadge />
+            </Link>
+            <Link to="/library">
+                <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+                    <BookOpen className="w-4 h-4 mr-1" /> Library
+                </Button>
+            </Link>
+        </>
+    ) : null;
+
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            <header className="bg-emerald-600 shadow-lg sticky top-0 z-30">
-                <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 font-bold text-xl shadow-lg">
-                            B
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-white tracking-tight leading-none">BullSpace</h1>
-                            <p className="text-xs text-emerald-50 font-medium">USF Room Reservation</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {currentUser && (
-                            <div className="text-white mr-4 text-sm hidden md:block">
-                                Hello, <span className="font-bold">{currentUser.name}</span>
-                            </div>
-                        )}
-                        {currentUser?.role === 'admin' && (
-                            <>
-                                <Link
-                                    to="/org-stats"
-                                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-indigo-400"
-                                >
-                                    <BarChart2 size={16} />
-                                    Organization Stats
-                                </Link>
-                                <Link
-                                    to="/activity-log"
-                                    className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-amber-400 relative"
-                                >
-                                    <ScrollText size={16} />
-                                    Activity Log
-                                    <UnreadBadge />
-                                </Link>
-                            </>
-                        )}
-                        {currentUser?.role === 'admin' && (
-                            <Link
-                                to="/library"
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md flex items-center gap-2 border-2 border-blue-400"
-                            >
-                                <BookOpen size={16} />
-                                Library Rooms
-                            </Link>
-                        )}
-                        <Link
-                            to="/map"
-                            className="bg-white border-2 border-white text-emerald-600 hover:bg-emerald-50 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-                        >
-                            <Search size={18} />
-                            Map View
+        <div className="min-h-screen bg-background">
+            <Navbar
+                subtitle="Event Space Dashboard"
+                username={currentUser?.name || 'Admin'}
+                actions={
+                    <>
+                        {navActions}
+                        <Link to="/map">
+                            <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+                                <Search className="w-4 h-4 mr-1" /> Map
+                            </Button>
                         </Link>
-                        <button
+                        <Button
+                            size="sm"
+                            variant="secondary"
                             onClick={() => navigate('/search')}
-                            className="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 border-2 border-emerald-500"
                         >
-                            <Plus size={18} />
-                            Book a Room
-                        </button>
-                        <button
-                            onClick={logout}
-                            className="text-white hover:text-emerald-100 text-sm font-medium transition-colors ml-2"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </header>
+                            <Plus className="w-4 h-4 mr-1" /> Book a Room
+                        </Button>
+                    </>
+                }
+            />
 
             <main className="container mx-auto px-4 py-8">
                 {/* My Upcoming Events — org and admin */}
                 {(currentUser?.role === 'org' || currentUser?.role === 'admin') && (
-                    <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-4">
+                    <section className="mb-8">
+                        <h2 className="text-xl font-semibold text-foreground mb-4">
                             {currentUser?.role === 'admin' ? 'All Upcoming Events' : 'My Upcoming Events'}
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {upcomingEvents.map((b, i) => (
-                                <div
+                                <Card
                                     key={b.id || i}
-                                    className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 group relative cursor-pointer hover:shadow-md hover:border-emerald-200 transition-all"
+                                    className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all border-l-4 border-l-primary"
                                     onClick={() => setSelectedEvent(b)}
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <p className="font-bold text-slate-800 text-lg">{b.room_name}</p>
-                                            <p className="text-sm text-emerald-600 font-medium">{b.date}</p>
+                                    <CardContent className="p-4">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 className="font-semibold text-foreground">{b.room_name}</h3>
+                                                <p className="text-sm text-primary font-medium">{b.date}</p>
+                                            </div>
+                                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                                                {b.status}
+                                            </Badge>
                                         </div>
-                                        <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full font-bold">
-                                            {b.status}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-slate-500 mt-1">{b.organization}</p>
-                                    <p className="text-sm text-slate-500 mt-1">{b.time_slot}</p>
+                                        <p className="text-sm text-muted-foreground">{b.organization}</p>
+                                        <p className="text-sm text-muted-foreground">{b.time_slot}</p>
 
-                                    {/* Action buttons */}
-                                    <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); setSelectedEvent(b); }}
-                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition-all border border-emerald-200"
-                                        >
-                                            <Eye size={13} />
-                                            View Details
-                                        </button>
-                                        {canModify(b) && (
-                                            <>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleEdit(b); }}
-                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 text-xs font-medium transition-all border border-slate-200 hover:border-emerald-200"
-                                                >
-                                                    <Pencil size={13} />
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleDelete(b); }}
-                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-medium transition-all border border-slate-200 hover:border-rose-200"
-                                                >
-                                                    <Trash2 size={13} />
-                                                    Delete
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
+                                        {/* Action buttons */}
+                                        <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="flex-1"
+                                                onClick={(e) => { e.stopPropagation(); setSelectedEvent(b); }}
+                                            >
+                                                <Eye size={13} className="mr-1" /> View
+                                            </Button>
+                                            {canModify(b) && (
+                                                <>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="flex-1"
+                                                        onClick={(e) => { e.stopPropagation(); handleEdit(b); }}
+                                                    >
+                                                        <Pencil size={13} className="mr-1" /> Edit
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="flex-1 text-destructive hover:text-destructive"
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(b); }}
+                                                    >
+                                                        <Trash2 size={13} className="mr-1" /> Delete
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             ))}
                             {upcomingEvents.length === 0 && (
-                                <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-slate-100 rounded-xl p-6 text-center text-slate-500">
-                                    No upcoming events found{currentUser?.role === 'org' ? ' for your organization' : ''}.
-                                </div>
+                                <Card className="col-span-1 md:col-span-2 lg:col-span-3">
+                                    <CardContent className="py-8 text-center">
+                                        <p className="text-muted-foreground">
+                                            No upcoming events found{currentUser?.role === 'org' ? ' for your organization' : ''}.
+                                        </p>
+                                    </CardContent>
+                                </Card>
                             )}
                         </div>
-                    </div>
+                    </section>
                 )}
 
                 <div className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                            <Calendar className="text-emerald-600" size={24} />
+                        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                            <Calendar className="text-primary" size={22} />
                             Room Schedule
                         </h2>
-                        <p className="text-slate-500 mt-1">View and manage room reservations across campus.</p>
+                        <p className="text-muted-foreground mt-1 text-sm">View and manage room reservations across campus.</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -272,16 +260,16 @@ const DashboardPage = () => {
                 {currentView === 'day' && (
                     <div className="mb-4 flex space-x-6 text-sm font-medium">
                         <div className="flex items-center">
-                            <span className="w-3 h-3 bg-emerald-50 border border-emerald-200 rounded-full mr-2"></span>
-                            <span className="text-slate-600">Available</span>
+                            <span className="w-3 h-3 bg-primary/10 border border-primary/20 rounded-full mr-2"></span>
+                            <span className="text-muted-foreground">Available</span>
                         </div>
                         <div className="flex items-center">
-                            <span className="w-3 h-3 bg-emerald-500 rounded-full mr-2 shadow-sm"></span>
-                            <span className="text-slate-600">Booked</span>
+                            <span className="w-3 h-3 bg-primary rounded-full mr-2 shadow-sm"></span>
+                            <span className="text-muted-foreground">Booked</span>
                         </div>
                         <div className="flex items-center">
-                            <span className="w-3 h-3 bg-rose-500 rounded-full mr-2 shadow-sm"></span>
-                            <span className="text-slate-600">Conflict</span>
+                            <span className="w-3 h-3 bg-destructive rounded-full mr-2 shadow-sm"></span>
+                            <span className="text-muted-foreground">Conflict</span>
                         </div>
                     </div>
                 )}
@@ -339,42 +327,44 @@ const DashboardPage = () => {
 
             {/* Event Detail Modal */}
             {selectedEvent && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedEvent(null)}>
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedEvent(null)}>
+                    <div className="bg-background rounded-lg shadow-lg border border-border max-w-lg w-full overflow-hidden animate-in fade-in-0 zoom-in-95" onClick={(e) => e.stopPropagation()}>
                         {/* Header */}
-                        <div className="bg-emerald-600 px-6 py-5 flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-white">Event Details</h3>
-                            <button onClick={() => setSelectedEvent(null)} className="text-white/80 hover:text-white transition">
-                                <X size={22} />
-                            </button>
+                        <div className="px-6 py-4 border-b border-border">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-foreground">Event Details</h3>
+                                <button onClick={() => setSelectedEvent(null)} className="text-muted-foreground hover:text-foreground transition p-1 rounded-md hover:bg-muted">
+                                    <X size={18} />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="p-6 space-y-5">
                             {/* Event Name */}
-                            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                                <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Event Name</p>
-                                <p className="text-lg font-bold text-slate-800">{selectedEvent.eventName || 'Untitled Event'}</p>
+                            <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+                                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Event Name</p>
+                                <p className="text-lg font-semibold text-foreground">{selectedEvent.eventName || 'Untitled Event'}</p>
                             </div>
 
                             {/* Org & Room */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex items-start gap-3">
-                                    <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Tag size={16} className="text-indigo-600" />
+                                    <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Tag size={16} className="text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-400 font-medium">Organization</p>
-                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.organization || '—'}</p>
+                                        <p className="text-xs text-muted-foreground font-medium">Organization</p>
+                                        <p className="text-sm font-semibold text-foreground">{selectedEvent.organization || '—'}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <MapPin size={16} className="text-blue-600" />
+                                    <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <MapPin size={16} className="text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-400 font-medium">Room</p>
-                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.room_name || 'Unknown Room'}</p>
-                                        <p className="text-xs text-slate-400">{selectedEvent.building || ''}</p>
+                                        <p className="text-xs text-muted-foreground font-medium">Room</p>
+                                        <p className="text-sm font-semibold text-foreground">{selectedEvent.room_name || 'Unknown Room'}</p>
+                                        <p className="text-xs text-muted-foreground">{selectedEvent.building || ''}</p>
                                     </div>
                                 </div>
                             </div>
@@ -382,57 +372,58 @@ const DashboardPage = () => {
                             {/* Date, Time, Capacity */}
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="flex items-start gap-3">
-                                    <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Calendar size={16} className="text-amber-600" />
+                                    <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Calendar size={16} className="text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-400 font-medium">Date</p>
-                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.date}</p>
+                                        <p className="text-xs text-muted-foreground font-medium">Date</p>
+                                        <p className="text-sm font-semibold text-foreground">{selectedEvent.date}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Clock size={16} className="text-purple-600" />
+                                    <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Clock size={16} className="text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-400 font-medium">Time</p>
-                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.time_slot}</p>
+                                        <p className="text-xs text-muted-foreground font-medium">Time</p>
+                                        <p className="text-sm font-semibold text-foreground">{selectedEvent.time_slot}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="w-9 h-9 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <UsersIcon size={16} className="text-teal-600" />
+                                    <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <UsersIcon size={16} className="text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-400 font-medium">Expected Attendance</p>
-                                        <p className="text-sm font-bold text-slate-800">{selectedEvent.groupSize || selectedEvent.capacity || '—'}</p>
+                                        <p className="text-xs text-muted-foreground font-medium">Attendance</p>
+                                        <p className="text-sm font-semibold text-foreground">{selectedEvent.groupSize || selectedEvent.capacity || '—'}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Status & Source */}
-                            <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                                <span className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold">{selectedEvent.status}</span>
+                            <div className="flex items-center gap-3 pt-3 border-t border-border">
+                                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">{selectedEvent.status}</Badge>
                                 {selectedEvent.system_source && (
-                                    <span className="bg-slate-100 text-slate-600 text-xs px-3 py-1 rounded-full font-mono">{selectedEvent.system_source}</span>
+                                    <Badge variant="secondary" className="font-mono">{selectedEvent.system_source}</Badge>
                                 )}
                             </div>
 
                             {/* Actions */}
                             {canModify(selectedEvent) && (
-                                <div className="flex gap-3 pt-3 border-t border-slate-100">
-                                    <button
+                                <div className="flex gap-3 pt-3 border-t border-border">
+                                    <Button
+                                        className="flex-1"
                                         onClick={() => { handleEdit(selectedEvent); setSelectedEvent(null); }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-all shadow-md"
                                     >
-                                        <Pencil size={14} /> Edit Booking
-                                    </button>
-                                    <button
+                                        <Pencil size={14} className="mr-1" /> Edit Booking
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 text-destructive hover:text-destructive"
                                         onClick={() => { handleDelete(selectedEvent); setSelectedEvent(null); }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-semibold transition-all border border-rose-200"
                                     >
-                                        <Trash2 size={14} /> Delete
-                                    </button>
+                                        <Trash2 size={14} className="mr-1" /> Delete
+                                    </Button>
                                 </div>
                             )}
                         </div>

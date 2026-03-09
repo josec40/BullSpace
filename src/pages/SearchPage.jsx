@@ -6,6 +6,22 @@ import { parse } from 'date-fns';
 import { searchRooms } from '../utils/bookingUtils';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
+import Navbar from '@/components/Navbar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+
+// Stock images per room type
+const DEFAULT_IMAGES = {
+    'Study Room': 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
+    'Classroom': 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80',
+    'Conference Room': 'https://images.unsplash.com/photo-1431540015161-0bf868a2d407?w=800&q=80',
+    'Computer Lab': 'https://images.unsplash.com/photo-1517502884422-41eae6c63f6e?w=800&q=80',
+    'Group Study Room': 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
+    'Quiet Study Room': 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=800&q=80',
+    'Sports Facility': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
+};
 
 const SearchPage = () => {
     const navigate = useNavigate();
@@ -57,7 +73,6 @@ const SearchPage = () => {
     const handleSearch = async (e) => {
         e.preventDefault();
 
-
         if (!filters.date || !filters.startTime || !filters.endTime) {
             setError("Please select a date and time range.");
             return;
@@ -96,42 +111,37 @@ const SearchPage = () => {
         });
     };
 
+    // Determine subtitle based on role
+    const subtitle = currentUser?.role === 'student'
+        ? 'Library Rooms'
+        : currentUser?.role === 'admin'
+            ? 'Administration'
+            : 'Organization Portal';
+
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            <header className="bg-emerald-600 shadow-lg sticky top-0 z-30">
-                <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-                    <Link to="/" className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 font-bold text-xl shadow-lg">
-                            B
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-white tracking-tight leading-none">Bullspace</h1>
-                            <p className="text-xs text-emerald-50 font-medium">USF Room Reservation</p>
-                        </div>
-                    </Link>
+        <div className="min-h-screen bg-background">
+            <Navbar subtitle={subtitle} username={currentUser?.name || 'User'} />
+
+            <main className="container mx-auto p-6 max-w-7xl">
+                <div className="mb-6">
+                    <h2 className="text-3xl font-bold text-foreground">Find a Room</h2>
+                    <p className="text-muted-foreground mt-1">Search for available spaces across campus.</p>
                 </div>
-            </header>
 
-            <main className="container mx-auto px-4 py-8">
-                <div className="max-w-5xl mx-auto">
-                    <div className="mb-8">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-2">Find a Room</h2>
-                        <p className="text-slate-500">Search for available spaces across campus.</p>
-                    </div>
-
-                    {/* Search Form */}
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 mb-8">
+                {/* Search Form */}
+                <Card className="mb-8">
+                    <CardContent className="pt-6">
                         <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {/* Building */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                    <MapPin size={16} className="text-emerald-600" /> Building
-                                </label>
+                                <Label className="mb-2 flex items-center gap-2">
+                                    <MapPin size={16} className="text-primary" /> Building
+                                </Label>
                                 <select
                                     name="building"
                                     value={filters.building}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 >
                                     <option value="">Any Building</option>
                                     <option value="Engineering Building II">Engineering Building II</option>
@@ -144,14 +154,14 @@ const SearchPage = () => {
 
                             {/* Type */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                    <BookOpen size={16} className="text-emerald-600" /> Room Type
-                                </label>
+                                <Label className="mb-2 flex items-center gap-2">
+                                    <BookOpen size={16} className="text-primary" /> Room Type
+                                </Label>
                                 <select
                                     name="type"
                                     value={filters.type}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 >
                                     <option value="">Any Type</option>
                                     <option value="Conference Room">Conference Room</option>
@@ -162,14 +172,14 @@ const SearchPage = () => {
 
                             {/* Capacity */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                    <Users size={16} className="text-emerald-600" /> Capacity
-                                </label>
+                                <Label className="mb-2 flex items-center gap-2">
+                                    <Users size={16} className="text-primary" /> Capacity
+                                </Label>
                                 <select
                                     name="capacity"
                                     value={filters.capacity}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 >
                                     <option value="">Any Capacity</option>
                                     <option value="10-20">10-20 People</option>
@@ -180,122 +190,147 @@ const SearchPage = () => {
 
                             {/* Date */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                    <Calendar size={16} className="text-emerald-600" /> Date
-                                </label>
+                                <Label className="mb-2 flex items-center gap-2">
+                                    <Calendar size={16} className="text-primary" /> Date
+                                </Label>
                                 <input
                                     type="date"
                                     name="date"
                                     value={filters.date}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 />
                             </div>
 
                             {/* Time Range */}
                             <div className="lg:col-span-2 grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                        <Clock size={16} className="text-emerald-600" /> From
-                                    </label>
+                                    <Label className="mb-2 flex items-center gap-2">
+                                        <Clock size={16} className="text-primary" /> From
+                                    </Label>
                                     <select
                                         name="startTime"
                                         value={filters.startTime}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     >
                                         <option value="">Select Time</option>
-                                        {timeOptions.map(opt => <option key={`start - ${opt.value} `} value={opt.value}>{opt.label}</option>)}
+                                        {timeOptions.map(opt => <option key={`start-${opt.value}`} value={opt.value}>{opt.label}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                        <Clock size={16} className="text-emerald-600" /> Until
-                                    </label>
+                                    <Label className="mb-2 flex items-center gap-2">
+                                        <Clock size={16} className="text-primary" /> Until
+                                    </Label>
                                     <select
                                         name="endTime"
                                         value={filters.endTime}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     >
                                         <option value="">Select Time</option>
-                                        {timeOptions.map(opt => <option key={`end - ${opt.value} `} value={opt.value}>{opt.label}</option>)}
+                                        {timeOptions.map(opt => <option key={`end-${opt.value}`} value={opt.value}>{opt.label}</option>)}
                                     </select>
                                 </div>
                             </div>
 
                             {/* Submit */}
                             <div className="md:col-span-2 lg:col-span-3 flex items-end justify-end">
-                                <button
-                                    type="submit"
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-                                >
-                                    <Search size={20} />
+                                <Button type="submit" size="lg">
+                                    <Search className="mr-2 h-5 w-5" />
                                     Search Rooms
-                                </button>
+                                </Button>
                             </div>
                         </form>
                         {error && (
-                            <div className="mt-4 p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-sm font-medium">
+                            <div className="mt-4 p-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <AlertCircle size={16} />
                                 {error}
                             </div>
                         )}
-                    </div>
+                    </CardContent>
+                </Card>
 
-                    {/* Results */}
-                    {hasSearched && (
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <Filter size={20} className="text-emerald-600" />
-                                Search Results ({results.length})
-                            </h3>
+                {/* Results */}
+                {hasSearched && (
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                            <Filter size={20} className="text-primary" />
+                            Search Results ({results.length})
+                        </h3>
 
-                            {results.length === 0 ? (
-                                <div className="text-center py-12 bg-white rounded-2xl border border-slate-100">
-                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Search size={32} className="text-slate-400" />
+                        {results.length === 0 ? (
+                            <Card>
+                                <CardContent className="py-12 text-center">
+                                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Search size={32} className="text-muted-foreground" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-700">No rooms found</h3>
-                                    <p className="text-slate-500">Try adjusting your filters or time range.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {results.map(room => (
-                                        <div key={room.id} className={`p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow flex flex-col justify-between ${room.isAvailable ? 'bg-white border-slate-200' : 'bg-rose-50 border-rose-200'}`}>
-                                            <div>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div>
-                                                        <h4 className={`text-lg font-bold ${room.isAvailable ? 'text-slate-800' : 'text-rose-900'}`}>{room.name}</h4>
-                                                        <p className={`text-sm ${room.isAvailable ? 'text-slate-500' : 'text-rose-600'}`}>{room.building}</p>
-                                                    </div>
-                                                    <span className={`px-2 py-1 text-xs font-bold rounded-md uppercase tracking-wide ${room.isAvailable ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-100 text-rose-800'}`}>
-                                                        {room.type}
-                                                    </span>
+                                    <h3 className="text-lg font-bold text-foreground">No rooms found</h3>
+                                    <p className="text-muted-foreground">Try adjusting your filters or time range.</p>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {results.map(room => {
+                                    const imageUrl = DEFAULT_IMAGES[room.type] || DEFAULT_IMAGES['Classroom'];
+                                    return (
+                                        <Card
+                                            key={room.id}
+                                            className={`overflow-hidden hover:shadow-md transition-shadow ${!room.isAvailable ? 'border-destructive/30 bg-destructive/5' : ''}`}
+                                        >
+                                            <div className="relative h-40 overflow-hidden">
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={room.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <div className="absolute top-2 right-2">
+                                                    <Badge variant={room.isAvailable ? 'default' : 'destructive'}>
+                                                        {room.isAvailable ? 'Available' : 'Unavailable'}
+                                                    </Badge>
                                                 </div>
-                                                <div className={`flex items-center gap-4 text-sm mb-4 ${room.isAvailable ? 'text-slate-600' : 'text-rose-700'}`}>
-                                                    <span className="flex items-center gap-1"><Users size={14} /> {room.capacity} Seats</span>
-                                                    <span className="flex items-center gap-1"><BookOpen size={14} /> {room.features.join(', ')}</span>
-                                                </div>
-                                                {!room.isAvailable && room.conflict && (
-                                                    <div className="text-sm font-bold text-rose-700 mb-4 flex items-center gap-1">
-                                                        <AlertCircle size={16} /> Taken ({room.conflict.time_slot})
-                                                    </div>
-                                                )}
                                             </div>
-                                            <button
-                                                onClick={() => handleBook(room)}
-                                                disabled={!room.isAvailable}
-                                                className={`w-full mt-4 border-2 font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${room.isAvailable ? 'bg-white border-emerald-600 text-emerald-600 hover:bg-emerald-50' : 'bg-rose-100 border-rose-300 text-rose-500 cursor-not-allowed opacity-50'}`}
-                                            >
-                                                {room.isAvailable ? 'Book This Room' : 'Unavailable'} <ArrowRight size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                                            <CardContent className="p-5 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <h4 className={`text-lg font-bold ${room.isAvailable ? 'text-foreground' : 'text-destructive'}`}>
+                                                                {room.name}
+                                                            </h4>
+                                                            <p className={`text-sm ${room.isAvailable ? 'text-muted-foreground' : 'text-destructive/70'}`}>
+                                                                {room.building}
+                                                            </p>
+                                                        </div>
+                                                        <Badge variant="secondary">
+                                                            {room.type}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className={`flex items-center gap-4 text-sm mb-4 ${room.isAvailable ? 'text-muted-foreground' : 'text-destructive/70'}`}>
+                                                        <span className="flex items-center gap-1"><Users size={14} /> {room.capacity} Seats</span>
+                                                        <span className="flex items-center gap-1"><BookOpen size={14} /> {room.features.join(', ')}</span>
+                                                    </div>
+                                                    {!room.isAvailable && room.conflict && (
+                                                        <div className="text-sm font-bold text-destructive mb-4 flex items-center gap-1">
+                                                            <AlertCircle size={16} /> Taken ({room.conflict.time_slot})
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <Button
+                                                    onClick={() => handleBook(room)}
+                                                    disabled={!room.isAvailable}
+                                                    variant={room.isAvailable ? 'default' : 'destructive'}
+                                                    className="w-full mt-2"
+                                                >
+                                                    {room.isAvailable ? 'Book This Room' : 'Unavailable'} <ArrowRight className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
             </main>
         </div>
     );

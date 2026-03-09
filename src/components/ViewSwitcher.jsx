@@ -9,7 +9,7 @@ const ViewSwitcher = ({ currentView, onViewChange }) => {
     ];
 
     return (
-        <div className="flex bg-slate-100 p-1 rounded-lg">
+        <div className="flex bg-muted p-1 rounded-lg">
             {views.map(view => {
                 const Icon = view.icon;
                 const isActive = currentView === view.id;
@@ -18,7 +18,7 @@ const ViewSwitcher = ({ currentView, onViewChange }) => {
                         key={view.id}
                         onClick={() => onViewChange(view.id)}
                         className={`flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isActive
-                            ? 'bg-emerald-50 text-emerald-700 shadow-md border border-emerald-200'
+                            ? 'bg-[#006747]/10 text-[#006747] shadow-md border border-[#006747]/20'
                             : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >

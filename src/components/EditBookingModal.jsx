@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { X, Save, Clock, Calendar, AlertCircle, Users } from 'lucide-react';
+import { Save, Clock, Calendar, AlertCircle, Users, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 const EditBookingModal = ({ booking, rooms = [], onSave, onClose }) => {
     const { currentUser } = useAuth();
@@ -35,7 +38,7 @@ const EditBookingModal = ({ booking, rooms = [], onSave, onClose }) => {
 
     // Live validation
     const todayStr = new Date().toISOString().slice(0, 10);
-    const nowTime = new Date().toTimeString().slice(0, 5); // "HH:MM"
+    const nowTime = new Date().toTimeString().slice(0, 5);
 
     const dateError = formData.date && formData.date < todayStr
         ? 'Cannot select a past date.'
@@ -89,59 +92,60 @@ const EditBookingModal = ({ booking, rooms = [], onSave, onClose }) => {
         }
     };
 
+    const inputClasses = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in">
+            <div className="relative bg-background rounded-lg shadow-lg w-full max-w-md overflow-hidden border border-border animate-in fade-in-0 zoom-in-95">
                 {/* Header */}
-                <div className="bg-emerald-600 px-6 py-5 text-white flex items-center justify-between">
-                    <h2 className="text-lg font-bold">Edit Booking</h2>
-                    <button
-                        onClick={onClose}
-                        className="p-1.5 rounded-lg hover:bg-white/20 transition"
-                    >
-                        <X size={18} />
-                    </button>
+                <div className="px-6 py-4 border-b border-border">
+                    <h2 className="text-lg font-semibold text-foreground">Edit Booking</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Update reservation details</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {/* Error */}
                     {error && (
-                        <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-lg text-sm flex items-start gap-2">
+                        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-lg text-sm flex items-start gap-2">
                             <AlertCircle size={16} className="shrink-0 mt-0.5" />
                             <span>{error}</span>
                         </div>
                     )}
 
                     {/* Room info (read-only) */}
-                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Room</p>
-                        <p className="text-sm font-bold text-slate-800">{room?.name || booking.roomId}</p>
-                        {room?.building && <p className="text-xs text-slate-500">{room.building}</p>}
+                    <div className="bg-muted rounded-lg p-3">
+                        <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="w-4 h-4 text-primary" />
+                            <span className="font-medium text-foreground">{room?.name || booking.roomId}</span>
+                            {room?.building && (
+                                <span className="text-muted-foreground">— {room.building}</span>
+                            )}
+                        </div>
                     </div>
 
                     {/* Organization — hidden for students */}
                     {userRole !== 'student' && (
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1.5">Organization</label>
+                            <Label className="mb-2">Organization</Label>
                             <input
                                 type="text"
                                 name="organization"
                                 value={formData.organization}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm text-gray-900"
+                                className={inputClasses}
                             />
                         </div>
                     )}
 
                     {/* Group Size */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
-                            <Users size={14} className="text-emerald-600" /> Group Size
-                        </label>
+                        <Label className="mb-2 flex items-center gap-1.5">
+                            <Users size={14} className="text-primary" /> Group Size
+                        </Label>
                         <input
                             type="number"
                             name="groupSize"
@@ -150,37 +154,37 @@ const EditBookingModal = ({ booking, rooms = [], onSave, onClose }) => {
                             min="1"
                             max={room?.capacity || 50}
                             placeholder={room?.capacity ? `Max ${room.capacity}` : 'Enter group size'}
-                            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm text-gray-900"
+                            className={inputClasses}
                         />
                     </div>
 
                     {/* Date */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
-                            <Calendar size={14} className="text-emerald-600" /> Date
-                        </label>
+                        <Label className="mb-2 flex items-center gap-1.5">
+                            <Calendar size={14} className="text-primary" /> Date
+                        </Label>
                         <input
                             type="date"
                             name="date"
                             value={formData.date}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm text-gray-900"
+                            className={inputClasses}
                         />
                     </div>
 
                     {/* Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
-                                <Clock size={14} className="text-emerald-600" /> Start
-                            </label>
+                            <Label className="mb-2 flex items-center gap-1.5">
+                                <Clock size={14} className="text-primary" /> Start
+                            </Label>
                             <select
                                 name="startTime"
                                 value={formData.startTime}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm bg-white text-gray-900"
+                                className={inputClasses}
                             >
                                 <option value="">Select</option>
                                 {timeOptions.map(t => (
@@ -189,15 +193,15 @@ const EditBookingModal = ({ booking, rooms = [], onSave, onClose }) => {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
-                                <Clock size={14} className="text-emerald-600" /> End
-                            </label>
+                            <Label className="mb-2 flex items-center gap-1.5">
+                                <Clock size={14} className="text-primary" /> End
+                            </Label>
                             <select
                                 name="endTime"
                                 value={formData.endTime}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm bg-white text-gray-900"
+                                className={inputClasses}
                             >
                                 <option value="">Select</option>
                                 {timeOptions.map(t => (
@@ -217,27 +221,23 @@ const EditBookingModal = ({ booking, rooms = [], onSave, onClose }) => {
 
                     {/* Actions */}
                     <div className="flex gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition"
-                        >
+                        <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
+                            className="flex-1"
                             disabled={saving || !!validationError}
-                            className={`flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-700 transition flex items-center justify-center gap-2 ${(saving || validationError) ? 'opacity-75 cursor-not-allowed' : ''}`}
                         >
                             {saving ? (
                                 <span className="animate-pulse">Saving...</span>
                             ) : (
                                 <>
-                                    <Save size={16} />
+                                    <Save size={16} className="mr-1" />
                                     Save Changes
                                 </>
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

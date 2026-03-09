@@ -6,11 +6,16 @@ import { validateBookingDate } from '../utils/validationUtils';
 import { useBookings } from '../context/BookingContext';
 import { searchRooms } from '../utils/bookingUtils';
 import { useAuth } from '../context/AuthContext';
+import Navbar from '@/components/Navbar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 const BookingPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { addBooking, fetchBookings, rooms: roomsData = [] } = useBookings(); // Updated destructuring
+    const { addBooking, fetchBookings, rooms: roomsData = [] } = useBookings();
     const { currentUser } = useAuth();
     const prefilled = location.state?.prefilled || {};
 
@@ -67,7 +72,7 @@ const BookingPage = () => {
         }
     };
 
-    const handleSubmit = async (e) => { // Made handleSubmit async
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         setSuggestions([]);
@@ -91,7 +96,7 @@ const BookingPage = () => {
             date: parsedDate,
             startTime: formData.startTime,
             endTime: formData.endTime,
-        }, roomsData, latestBookings); // Use latestBookings for conflict check
+        }, roomsData, latestBookings);
 
         const targetRoom = conflictCheck.find(r => r.id === formData.room);
         const isRoomAvailable = targetRoom && targetRoom.isAvailable;
@@ -105,7 +110,7 @@ const BookingPage = () => {
                     startTime: formData.startTime,
                     endTime: formData.endTime,
                     building: selectedRoom.building
-                }, roomsData, latestBookings); // Use latestBookings for alternatives
+                }, roomsData, latestBookings);
 
                 setSuggestions(alternatives);
             }
@@ -118,8 +123,8 @@ const BookingPage = () => {
             roomId: formData.room,
             date: formData.date,
             time_slot: `${format(new Date(`2000-01-01T${formData.startTime}`), 'hh:mm a')} - ${format(new Date(`2000-01-01T${formData.endTime}`), 'hh:mm a')}`,
-            startTime: formData.startTime, // Added for DynamoDB
-            endTime: formData.endTime,     // Added for DynamoDB
+            startTime: formData.startTime,
+            endTime: formData.endTime,
             organization: currentUser?.role === 'student' ? (currentUser.name || 'Individual Student') : formData.orgName,
             eventName: currentUser?.role === 'student' ? 'Study Session' : formData.eventName,
             groupSize: formData.occupancy || null,
@@ -130,7 +135,7 @@ const BookingPage = () => {
             console.log('Booking Submitted:', newBooking);
             navigate(currentUser?.role === 'student' ? '/library' : '/');
         } catch (err) {
-            if (err.status === 409) { // Conflict error from backend
+            if (err.status === 409) {
                 setError(err.message);
             } else {
                 setError('Something went wrong. Please try again.');
@@ -141,21 +146,18 @@ const BookingPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            <header className="bg-white shadow-sm border-b border-slate-200">
-                <div className="container mx-auto px-4 py-4">
-                    <Link to="/" className="inline-flex items-center text-slate-600 hover:text-emerald-600 transition-colors font-medium">
-                        <ArrowLeft size={20} className="mr-2" />
-                        Back to Dashboard
-                    </Link>
-                </div>
-            </header>
+        <div className="min-h-screen bg-background">
+            <Navbar
+                subtitle="Book a Room"
+                username={currentUser?.name || 'User'}
+            />
 
             <main className="container mx-auto px-4 py-12 max-w-3xl">
-                <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-                    <div className="bg-emerald-600 px-8 py-8 text-white">
+                <Card className="overflow-hidden shadow-md">
+                    {/* Green banner header */}
+                    <div className="bg-primary px-8 py-8 text-primary-foreground">
                         <h1 className="text-3xl font-bold mb-2">Book a Room</h1>
-                        <p className="text-emerald-50">
+                        <p className="text-primary-foreground/80">
                             {currentUser?.role === 'student'
                                 ? 'Reserve a study space.'
                                 : 'Reserve a space for your organization or event.'}
@@ -164,7 +166,7 @@ const BookingPage = () => {
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-8">
                         {error && (
-                            <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-lg">
+                            <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-lg">
                                 <div className="flex items-start gap-3 mb-2">
                                     <AlertCircle className="shrink-0 mt-0.5" size={20} />
                                     <div>
@@ -174,18 +176,18 @@ const BookingPage = () => {
                                 </div>
                                 {suggestions.length > 0 && (
                                     <div className="mt-3 pl-8">
-                                        <p className="text-sm font-semibold mb-1 text-rose-800">Other available rooms in {selectedRoom?.building}:</p>
+                                        <p className="text-sm font-semibold mb-1">Other available rooms in {selectedRoom?.building}:</p>
                                         <ul className="list-disc pl-4 text-sm space-y-1">
                                             {suggestions.map(room => (
                                                 <li key={room.id}>
                                                     <button
                                                         type="button"
                                                         onClick={() => setFormData(prev => ({ ...prev, room: room.id }))}
-                                                        className="underline hover:text-rose-900 font-medium"
+                                                        className="underline hover:opacity-80 font-medium"
                                                     >
                                                         {room.name}
                                                     </button>
-                                                    <span className="text-rose-600/80 ml-2">({room.capacity} seats, {room.type})</span>
+                                                    <span className="opacity-80 ml-2">({room.capacity} seats, {room.type})</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -196,45 +198,45 @@ const BookingPage = () => {
 
                         {/* Pre-filled Room Info */}
                         {selectedRoom && (
-                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center justify-between">
+                            <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 flex items-center justify-between">
                                 <div>
-                                    <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider">Selected Room</p>
-                                    <p className="text-lg font-bold text-slate-800">{selectedRoom.name}</p>
-                                    <p className="text-sm text-slate-500">{selectedRoom.building}</p>
+                                    <p className="text-xs text-primary font-bold uppercase tracking-wider">Selected Room</p>
+                                    <p className="text-lg font-semibold text-foreground">{selectedRoom.name}</p>
+                                    <p className="text-sm text-muted-foreground">{selectedRoom.building}</p>
                                 </div>
-                                <Link to="/search" className="text-sm text-emerald-600 font-medium hover:underline">Change</Link>
+                                <Link to="/search" className="text-sm text-primary font-medium hover:underline">Change</Link>
                             </div>
                         )}
 
                         {/* Section 1: Event / Booking Details */}
                         <div className="space-y-6">
-                            <h2 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                                <Building size={20} className="text-emerald-600" />
+                            <h2 className="text-lg font-semibold text-foreground border-b border-border pb-2 flex items-center gap-2">
+                                <Building size={20} className="text-primary" />
                                 {currentUser?.role === 'student' ? 'Booking Details' : 'Event Details'}
                             </h2>
 
                             {currentUser?.role !== 'student' && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">Organization Name</label>
+                                        <Label className="mb-2">Organization Name</Label>
                                         <input
                                             type="text"
                                             name="orgName"
                                             required
                                             readOnly={currentUser?.role === 'org'}
-                                            className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${currentUser?.role === 'org' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-300'}`}
+                                            className={`w-full px-4 py-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${currentUser?.role === 'org' ? 'bg-muted text-muted-foreground cursor-not-allowed' : ''}`}
                                             placeholder="e.g. Society of Engineers"
                                             value={formData.orgName}
                                             onChange={handleChange}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">Event Name</label>
+                                        <Label className="mb-2">Event Name</Label>
                                         <input
                                             type="text"
                                             name="eventName"
                                             required
-                                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                                            className="w-full px-4 py-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                             placeholder="e.g. Weekly Meeting"
                                             value={formData.eventName}
                                             onChange={handleChange}
@@ -244,16 +246,16 @@ const BookingPage = () => {
                             )}
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Expected Attendance</label>
+                                <Label className="mb-2">Expected Attendance</Label>
                                 <div className="relative">
-                                    <Users className="absolute left-3 top-3.5 text-slate-400 pointer-events-none" size={18} />
+                                    <Users className="absolute left-3 top-3.5 text-muted-foreground pointer-events-none" size={18} />
                                     <input
                                         type="number"
                                         name="occupancy"
                                         required
                                         min="1"
                                         placeholder="e.g. 25"
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none bg-white"
+                                        className="w-full pl-10 pr-4 py-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                         value={formData.occupancy}
                                         onChange={handleChange}
                                     />
@@ -263,44 +265,44 @@ const BookingPage = () => {
 
                         {/* Section 2: Time & Date */}
                         <div className="space-y-6">
-                            <h2 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                                <Clock size={20} className="text-emerald-600" />
+                            <h2 className="text-lg font-semibold text-foreground border-b border-border pb-2 flex items-center gap-2">
+                                <Clock size={20} className="text-primary" />
                                 Date & Time
                             </h2>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
+                                    <Label className="mb-2">Date</Label>
                                     <div className="relative">
-                                        <Calendar className="absolute left-3 top-3.5 text-slate-400" size={18} />
+                                        <Calendar className="absolute left-3 top-3.5 text-muted-foreground" size={18} />
                                         <input
                                             type="date"
                                             name="date"
                                             required
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                                            className="w-full pl-10 pr-4 py-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                             value={formData.date}
                                             onChange={handleChange}
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
+                                    <Label className="mb-2">Start Time</Label>
                                     <input
                                         type="time"
                                         name="startTime"
                                         required
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                                        className="w-full px-4 py-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                         value={formData.startTime}
                                         onChange={handleChange}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
+                                    <Label className="mb-2">End Time</Label>
                                     <input
                                         type="time"
                                         name="endTime"
                                         required
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                                        className="w-full px-4 py-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                         value={formData.endTime}
                                         onChange={handleChange}
                                     />
@@ -317,23 +319,24 @@ const BookingPage = () => {
                         )}
 
                         <div className="pt-6">
-                            <button
+                            <Button
                                 type="submit"
+                                size="lg"
                                 disabled={isSubmitting || !!validationError}
-                                className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 ${(isSubmitting || validationError) ? 'opacity-75 cursor-not-allowed' : ''}`}
+                                className="w-full text-base py-6"
                             >
                                 {isSubmitting ? (
                                     <span className="animate-pulse">Processing...</span>
                                 ) : (
                                     <>
-                                        <Check size={20} />
+                                        <Check size={20} className="mr-2" />
                                         Confirm Booking
                                     </>
                                 )}
-                            </button>
+                            </Button>
                         </div>
                     </form>
-                </div>
+                </Card>
             </main>
         </div>
     );

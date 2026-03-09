@@ -25,7 +25,7 @@ const DateNavigator = ({ currentDate, onDateChange, currentView = 'day' }) => {
             </button>
 
             <div className="flex items-center px-4 border-l border-r border-slate-100 mx-1">
-                <CalendarIcon size={18} className="text-indigo-500 mr-2" />
+                <CalendarIcon size={18} className="text-primary mr-2" />
                 <span className="font-semibold text-slate-700 min-w-[140px] text-center">
                     {format(currentDate, 'EEE, MMM d, yyyy')}
                 </span>

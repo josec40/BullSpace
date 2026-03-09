@@ -50,20 +50,20 @@ const MapView = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            <header className="bg-emerald-600 shadow-lg sticky top-0 z-50">
+            <header className="bg-[#006747] shadow-lg sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <Link to="/" className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 font-bold text-xl shadow-lg">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#006747] font-bold text-xl shadow-lg">
                             B
                         </div>
                         <div>
                             <h1 className="text-xl font-bold text-white tracking-tight leading-none">Bullspace</h1>
-                            <p className="text-xs text-emerald-50 font-medium">USF Room Reservation</p>
+                            <p className="text-xs text-[#e6f5ef] font-medium">USF Room Reservation</p>
                         </div>
                     </Link>
                     <Link
                         to="/"
-                        className="inline-flex items-center text-white hover:text-emerald-100 transition-colors font-medium"
+                        className="inline-flex items-center text-white hover:text-[#e6f5ef] transition-colors font-medium"
                     >
                         <ArrowLeft size={20} className="mr-2" />
                         Back to Dashboard
@@ -74,7 +74,7 @@ const MapView = () => {
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <h2 className="text-3xl font-bold text-slate-800 mb-2 flex items-center gap-2">
-                        <MapPin className="text-emerald-600" size={32} />
+                        <MapPin className="text-[#006747]" size={32} />
                         Campus Map
                     </h2>
                     <p className="text-slate-500">Click on a building marker to see available rooms</p>
@@ -109,7 +109,7 @@ const MapView = () => {
                                             {/* Building Header */}
                                             <div className="mb-4">
                                                 <div className="flex items-start gap-3 mb-2">
-                                                    <Building2 className="text-emerald-600 shrink-0 mt-1" size={24} />
+                                                    <Building2 className="text-[#006747] shrink-0 mt-1" size={24} />
                                                     <div>
                                                         <h3 className="text-lg font-bold text-slate-800 leading-tight">
                                                             {building.name}
@@ -122,7 +122,7 @@ const MapView = () => {
                                             {/* Room List */}
                                             <div className="border-t border-slate-200 pt-3">
                                                 <p className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                                    <Users size={14} className="text-emerald-600" />
+                                                    <Users size={14} className="text-[#006747]" />
                                                     Available Rooms ({rooms.length})
                                                 </p>
                                                 <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
@@ -141,7 +141,7 @@ const MapView = () => {
                                                                             {room.type}
                                                                         </p>
                                                                     </div>
-                                                                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-medium">
+                                                                    <span className="text-xs bg-[#006747]/15 text-[#006747] px-2 py-1 rounded-md font-medium">
                                                                         {room.capacity} seats
                                                                     </span>
                                                                 </div>
@@ -175,8 +175,8 @@ const MapView = () => {
                                 className="bg-white rounded-xl p-4 border border-slate-200 hover:shadow-md transition-shadow"
                             >
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <Building2 className="text-emerald-600" size={20} />
+                                    <div className="w-10 h-10 bg-[#006747]/15 rounded-lg flex items-center justify-center">
+                                        <Building2 className="text-[#006747]" size={20} />
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-slate-800 text-sm">{building.abbreviation}</h4>
